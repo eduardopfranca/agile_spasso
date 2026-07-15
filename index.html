@@ -137,6 +137,7 @@
     <button class="tb" id="impBtn">Importar JSON</button>
     <button class="tb" id="reset">Resetar</button>
     <input type="file" id="impFile" accept="application/json,.json">
+    <button class="tb" id="changeAuthor" title="Trocar seu nome">👤 <span id="authorLabel"></span></button>
     <span class="saveState" id="saveState"></span>
   </div>
 
@@ -164,8 +165,19 @@
 </div>
 
 <script>
-const KEY='projeto_app_v1';
+const API='https://agile-spasso.mesaagro.workers.dev';
 const uid=()=>'x'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+
+/* ---------- autor (nome no navegador) ---------- */
+let author=localStorage.getItem('autor');
+function ensureAuthor(){
+  if(!author){
+    author=(prompt('Seu nome (aparece nas notas e no rodapé de quem editou):')||'').trim()||'Anônimo';
+    localStorage.setItem('autor',author);
+  }
+  return author;
+}
+ensureAuthor();
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const el=id=>document.getElementById(id);
 
@@ -222,7 +234,7 @@ const DEFAULT_STATE={
   ]
 };
 
-let state, sortables=[];
+let state, sortables=[], docVersion=0;
 
 /* ---------- lookups ---------- */
 const getSection=id=>state.sections.find(s=>s.id===id);
@@ -245,9 +257,24 @@ const coverersOf=nodeId=>state.abas.filter(a=>a.coveredBy.includes(nodeId));
 /* ---------- persistence ---------- */
 let saveT;
 const setSaveState=t=>el('saveState').textContent=t;
-function save(){setSaveState('salvando…');clearTimeout(saveT);
-  saveT=setTimeout(async()=>{try{await window.storage.set(KEY,JSON.stringify(state),false);setSaveState('salvo ✓');}
-  catch(e){setSaveState('não salvou aqui — use Exportar');}},350);}
+function save(){
+  setSaveState('salvando…');clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    try{
+      state.lastEditedBy=author;state.lastEditedTs=new Date().toISOString();
+      const r=await fetch(API+'/doc',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({version:docVersion,data:state})});
+      if(r.status===409){
+        setSaveState('conflito — recarregue');
+        alert('Alguém salvou uma versão mais nova antes de você. Recarregue a página para pegar a versão atual (suas últimas alterações podem não ter sido salvas).');
+        return;
+      }
+      if(!r.ok) throw new Error('http '+r.status);
+      const out=await r.json();docVersion=out.version;
+      setSaveState('salvo ✓ (por '+author+')');
+    }catch(e){setSaveState('erro ao salvar — verifique a conexão');}
+  },350);
+}
 
 /* ---------- backlog render ---------- */
 function statusOptions(sel){return [['','—'],['E','E'],['A','A'],['N','N'],['P','P']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
@@ -431,6 +458,13 @@ el('docTitle').addEventListener('input',e=>{state.docTitle=e.target.value;save()
 el('docSub').addEventListener('input',e=>{state.docSub=e.target.value;save();});
 el('footNote').addEventListener('input',e=>{state.footNote=e.target.value;autosize(e.target);save();});
 
+/* ---------- autor (toolbar) ---------- */
+function refreshAuthorLabel(){el('authorLabel').textContent=author;}
+el('changeAuthor').addEventListener('click',()=>{
+  const n=(prompt('Seu nome:',author)||'').trim();
+  if(n){author=n;localStorage.setItem('autor',author);refreshAuthorLabel();}
+});
+
 /* ---------- toolbar ---------- */
 el('filterBang').addEventListener('click',()=>{document.body.classList.toggle('filtering');el('filterBang').classList.toggle('active');applyFilter();updateBangCount();});
 el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'',confirm:false,done:false,notes:'',text:''}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
@@ -484,13 +518,23 @@ function boot(){
   el('docTitle').value=state.docTitle||'';el('docSub').value=state.docSub||'';
   setView(state.activeView||'backlog');
   renderAll();autosize(el('footNote'));
+  refreshAuthorLabel();
 }
 async function load(){
+  setSaveState('carregando…');
   let loaded=null;
-  try{const r=await window.storage.get(KEY,false);if(r&&r.value)loaded=JSON.parse(r.value);}catch(e){}
+  try{
+    const r=await fetch(API+'/doc');
+    const out=await r.json();
+    docVersion=out.version||0;
+    loaded=out.data;
+  }catch(e){
+    setSaveState('sem conexão com o servidor — mostrando conteúdo padrão');
+  }
   if(loaded)normalize(loaded);
   state=loaded||JSON.parse(JSON.stringify(DEFAULT_STATE));
-  boot();setSaveState(loaded?'salvo ✓':'');
+  boot();
+  setSaveState(loaded?('salvo ✓'+(state.lastEditedBy?(' — última edição: '+state.lastEditedBy):'')):'novo documento — será criado ao salvar');
 }
 load();
 </script>
