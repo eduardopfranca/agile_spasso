@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check \"C:\\\\Users\\\\eduar\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\check.js\")"
+    ]
+  }
+}
