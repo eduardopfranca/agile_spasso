@@ -1,5 +1,5 @@
 {
-  "name": "agile-spasso-api",
+  "name": "agile-spasso",
   "main": "src/index.js",
   "compatibility_date": "2025-01-01",
   "kv_namespaces": [
