@@ -155,6 +155,7 @@
   /* sprints tab */
   .sprintCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
   .sprintHead{display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap}
+  .sprintNumber{font-weight:700;font-size:15px;color:var(--accent-ink);flex:none;padding:3px 4px}
   .sprintName{flex:1;min-width:120px;font-weight:700;font-size:15px;border:none;background:transparent;padding:3px 4px;border-radius:6px;color:var(--ink)}
   .sprintName:hover{background:#f4f1ec}.sprintName:focus{outline:2px solid var(--accent);background:#fff}
   .sprintDate{border:1px solid var(--line);border-radius:7px;padding:4px 6px;font-size:12.5px;color:#4a463f;background:var(--panel)}
@@ -247,7 +248,6 @@
   </div>
 
   <div id="view-retro">
-    <div class="hint">Somente leitura. Para adicionar uma retrospectiva, crie um arquivo <b>retrospectives/AAAAMMDD.md</b> no repositório.</div>
     <div id="retroList"></div>
   </div>
 </div>
@@ -357,25 +357,33 @@ const abaAposentavel=a=>a.coveredBy.length>0&&a.coveredBy.every(nodeDone);
 const coverersOf=nodeId=>state.abas.filter(a=>a.coveredBy.includes(nodeId));
 
 /* ---------- persistence ---------- */
-let saveT;
+let saveT, saveInFlight=false, savePending=false;
 const setSaveState=t=>el('saveState').textContent=t;
 function save(){
   setSaveState('salvando…');clearTimeout(saveT);
-  saveT=setTimeout(async()=>{
-    try{
-      state.lastEditedBy=author;state.lastEditedTs=new Date().toISOString();
-      const r=await fetch(API+'/doc',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({version:docVersion,data:state})});
-      if(r.status===409){
-        setSaveState('conflito — recarregue');
-        alert('Alguém salvou uma versão mais nova antes de você. Recarregue a página para pegar a versão atual (suas últimas alterações podem não ter sido salvas).');
-        return;
-      }
-      if(!r.ok) throw new Error('http '+r.status);
-      const out=await r.json();docVersion=out.version;
-      setSaveState('salvo ✓ (por '+author+')');
-    }catch(e){setSaveState('erro ao salvar — verifique a conexão');}
-  },350);
+  saveT=setTimeout(doSave,500);
+}
+async function doSave(){
+  if(saveInFlight){savePending=true;return;}
+  saveInFlight=true;
+  try{
+    state.lastEditedBy=author;state.lastEditedTs=new Date().toISOString();
+    const r=await fetch(API+'/doc',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({version:docVersion,data:state})});
+    if(r.status===409){
+      setSaveState('conflito — recarregue');
+      alert('Alguém salvou uma versão mais nova antes de você. Recarregue a página para pegar a versão atual (suas últimas alterações podem não ter sido salvas).');
+      return;
+    }
+    if(!r.ok) throw new Error('http '+r.status);
+    const out=await r.json();docVersion=out.version;
+    setSaveState('salvo ✓ (por '+author+')');
+  }catch(e){
+    setSaveState('erro ao salvar — verifique a conexão');
+  }finally{
+    saveInFlight=false;
+    if(savePending){savePending=false;doSave();}
+  }
 }
 
 /* ---------- backlog render ---------- */
@@ -390,15 +398,19 @@ function formatNoteTs(ts){try{return new Date(ts).toLocaleString('pt-BR',{dateSt
 function noteListHTML(it){
   return (it.notes||[]).map(n=>`<div class="noteEntry"><span class="noteMeta">${esc(n.author)} · ${formatNoteTs(n.ts)}</span><span class="noteText">${esc(n.text)}</span></div>`).join('');
 }
+function sprintLabel(sp){
+  if(!sp)return '(sprint removido)';
+  return `Sprint ${sp.number||'?'}`+(sp.name?` — ${sp.name}`:'');
+}
 function sprintPickHTML(it){
   let o='<option value="">— sem sprint —</option>';
-  state.sprints.forEach(sp=>{o+=`<option value="${sp.id}" ${sp.id===it.sprintId?'selected':''}>${esc(sp.name)}</option>`;});
+  state.sprints.forEach(sp=>{o+=`<option value="${sp.id}" ${sp.id===it.sprintId?'selected':''}>${esc(sprintLabel(sp))}</option>`;});
   return `<select class="sprintPick" data-role="sprintPick">${o}</select>`;
 }
 function sprintBadgeHTML(it){
   if(!it.sprintId)return '';
   const sp=state.sprints.find(s=>s.id===it.sprintId);
-  return `<button class="sprintBadge" data-role="gotoSprint" data-sprint-id="${it.sprintId}">→ ${esc(sp?sp.name:'(sprint removido)')}</button>`;
+  return `<button class="sprintBadge" data-role="gotoSprint" data-sprint-id="${it.sprintId}">→ ${esc(sprintLabel(sp))}</button>`;
 }
 function itemHTML(it,opts){
   opts=opts||{};
@@ -516,7 +528,8 @@ function sprintHTML(sp){
   const expanded=expandedSprints.has(sp.id);
   return `<div class="sprintCard ${expanded?'expanded':''}" data-spid="${sp.id}">
     <div class="sprintHead" data-role="sprintToggle">
-      <input class="sprintName" data-role="sprintName" value="${esc(sp.name)}" placeholder="Nome do sprint">
+      <span class="sprintNumber">Sprint ${sp.number||'?'}</span>
+      <input class="sprintName" data-role="sprintName" value="${esc(sp.name)}" placeholder="título (opcional)">
       <select class="status" data-role="sprintStatus">${sprintStatusOptions(sp.status)}</select>
       <input class="sprintDate" type="date" data-role="sprintStart" value="${esc(sp.start)}">
       <span class="sprintDateSep">–</span>
@@ -848,10 +861,11 @@ el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova se�
 el('addAba').addEventListener('click',()=>{const a={id:uid(),name:'Nova aba',tipo:'',status:'',coveredBy:[],papel:''};state.abas.push(a);renderMapa();updateProgress();save();const n=document.querySelector(`[data-aid="${a.id}"] .abaName`);if(n){n.focus();n.select();n.scrollIntoView({behavior:'smooth',block:'center'});}});
 el('addSprint').addEventListener('click',()=>{
   const today=new Date().toISOString().slice(0,10);
-  const sp={id:uid(),name:'Novo sprint',goal:'',start:today,end:'',status:'planned'};
+  const nextNumber=state.sprints.reduce((m,s)=>Math.max(m,s.number||0),0)+1;
+  const sp={id:uid(),number:nextNumber,name:'',goal:'',start:today,end:'',status:'planned'};
   state.sprints.push(sp);expandedSprints.add(sp.id);renderSprints();save();
   const n=document.querySelector(`[data-spid="${sp.id}"] .sprintName`);
-  if(n){n.focus();n.select();n.scrollIntoView({behavior:'smooth',block:'center'});}
+  if(n){n.focus();n.scrollIntoView({behavior:'smooth',block:'center'});}
 });
 el('addPendingItem').addEventListener('click',()=>{
   const p={id:uid(),origin:'standalone',title:'Novo item pendente',description:'',author:ensureAuthor(),createdAt:new Date().toISOString(),status:'open',urgency:'media'};
@@ -919,7 +933,11 @@ function normalize(o){
   if(!o.abas)o.abas=JSON.parse(JSON.stringify(DEFAULT_STATE.abas));
   o.abas.forEach(a=>{a.id=a.id||uid();if(!Array.isArray(a.coveredBy))a.coveredBy=[];if(a.papel===undefined)a.papel='';});
   if(!Array.isArray(o.sprints))o.sprints=[];
-  o.sprints.forEach(s=>{s.id=s.id||uid();s.name=s.name||'';s.goal=s.goal||'';s.start=s.start||'';s.end=s.end||'';s.status=s.status||'planned';});
+  let maxNum=o.sprints.reduce((m,s)=>Math.max(m,s.number||0),0);
+  o.sprints.forEach(s=>{
+    s.id=s.id||uid();s.name=s.name||'';s.goal=s.goal||'';s.start=s.start||'';s.end=s.end||'';s.status=s.status||'planned';
+    if(!s.number){maxNum+=1;s.number=maxNum;}
+  });
   if(!Array.isArray(o.pendingItems))o.pendingItems=[];
   o.pendingItems.forEach(p=>{p.id=p.id||uid();p.origin='standalone';p.status=p.status||'open';p.createdAt=p.createdAt||new Date(0).toISOString();p.urgency=p.urgency||'media';});
 }
