@@ -1,0 +1,496 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documento de Desenvolvimento do Aplicativo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<style>
+  :root{
+    --bg:#faf9f7;--panel:#fff;--ink:#2b2b2b;--muted:#8a857e;--line:#e7e3dd;
+    --accent:#1f7a5c;--accent-ink:#0f5c43;
+    --E:#1a7f5a;--Ebg:#e4f3ec;--A:#a6650c;--Abg:#fbeed6;--N:#2563a8;--Nbg:#e6eff8;
+    --P:#6b46c1;--Pbg:#efe9fb;--none:#9a938a;--nonebg:#f0ede8;--bang:#c0392b;--bangbg:#fbe6e2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:920px;margin:0 auto;padding:20px 18px 90px}
+  .titleInput{font-size:23px;font-weight:700;border:none;background:transparent;width:100%;color:var(--ink);padding:2px 4px;border-radius:6px;letter-spacing:-.01em}
+  .subInput{color:var(--muted);font-weight:600;border:none;background:transparent;width:100%;padding:2px 4px;border-radius:6px;margin-bottom:10px}
+  .titleInput:hover,.subInput:hover{background:#f2efe9}
+  .titleInput:focus,.subInput:focus{outline:2px solid var(--accent);background:#fff}
+
+  .tabs{display:flex;gap:4px;margin:8px 0 0}
+  .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:#f1ede7;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px}
+  .tab.active{background:var(--panel);color:var(--ink)}
+  .progress{background:var(--panel);border:1px solid var(--line);border-radius:0 9px 9px 9px;padding:9px 13px;font-size:13.5px;color:#4a463f;margin-bottom:12px}
+  .progress .aposN{color:var(--accent-ink)}
+
+  .diagram{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-weight:600;color:#3d3a35;line-height:1.7;margin-bottom:12px;font-size:14px}
+  .diagram .arrow{color:var(--accent);padding:0 4px;font-weight:700}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;font-size:12.5px;color:var(--muted);align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  .chip.E{color:var(--E);background:var(--Ebg)}.chip.A{color:var(--A);background:var(--Abg)}
+  .chip.N{color:var(--N);background:var(--Nbg)}.chip.P{color:var(--P);background:var(--Pbg)}
+  .chip.B{color:var(--bang);background:var(--bangbg)}.chip.D{color:var(--E);background:var(--Ebg)}
+
+  .toolbar{position:sticky;top:0;z-index:20;background:var(--bg);padding:9px 0;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+  button.tb{border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13.5px}
+  button.tb:hover{border-color:var(--accent);color:var(--accent-ink)}
+  button.tb.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.tb.primary:hover{background:var(--accent-ink)}
+  button.tb.bangfilter{border-color:#eec3bc;color:var(--bang)}
+  button.tb.bangfilter.active{background:var(--bang);color:#fff;border-color:var(--bang)}
+  .saveState{margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:600}
+
+  .section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 12px 8px;margin:14px 0}
+  .secHead{display:flex;align-items:flex-start;gap:8px}
+  .handle{cursor:grab;color:#c3bdb4;font-size:18px;line-height:1;padding:4px 2px;user-select:none;flex:none}
+  .handle:active{cursor:grabbing}
+  .secHead .grow{flex:1;min-width:0}
+  .secTitleRow{display:flex;align-items:center;gap:8px}
+  .secTitle{font-size:18px;font-weight:700;border:none;background:transparent;flex:1;padding:2px 4px;border-radius:6px;color:var(--ink)}
+  .secSub{font-style:italic;color:var(--muted);border:none;background:transparent;width:100%;padding:2px 4px;border-radius:6px;font-size:13.5px}
+  .secIntro{width:100%;border:none;background:transparent;resize:none;padding:6px 4px;border-radius:6px;color:#4a463f;font-size:14px;line-height:1.55;overflow:hidden}
+  .secTitle:hover,.secSub:hover,.secIntro:hover{background:#f6f3ee}
+  .secTitle:focus,.secSub:focus,.secIntro:focus{outline:2px solid var(--accent);background:#fff}
+  .secDone{font-size:11.5px;font-weight:700;color:var(--E);background:var(--Ebg);border-radius:999px;padding:2px 8px;flex:none}
+  .secDel{border:none;background:transparent;color:#c9c2b8;cursor:pointer;font-size:16px;padding:4px 6px;border-radius:6px;flex:none}
+  .secDel:hover{color:var(--bang);background:var(--bangbg)}
+
+  .items{margin-top:6px;display:flex;flex-direction:column;gap:4px;min-height:8px}
+  .item{display:flex;align-items:flex-start;gap:8px;padding:6px;border-radius:9px;border:1px solid transparent}
+  .item:hover{background:#faf8f4;border-color:var(--line)}
+  .item.isDone{border-left:3px solid var(--E);background:#f3f9f5}
+  .item.isDone .itemText{color:#6a7f74}
+  .item .handle{font-size:15px;padding-top:6px}
+  input.done{width:17px;height:17px;flex:none;margin-top:5px;cursor:pointer;accent-color:var(--E)}
+  select.status{appearance:none;-webkit-appearance:none;border:1px solid var(--line);border-radius:7px;font-weight:700;font-size:12px;padding:5px 8px;cursor:pointer;flex:none;text-align:center;background:var(--nonebg);color:var(--none)}
+  select.status.E{background:var(--Ebg);color:var(--E)}select.status.A{background:var(--Abg);color:var(--A)}
+  select.status.N{background:var(--Nbg);color:var(--N)}select.status.P{background:var(--Pbg);color:var(--P)}
+  .bang{flex:none;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:#cfc8be;font-weight:800;cursor:pointer;padding:5px 9px;font-size:13px;line-height:1}
+  .bang.on{background:var(--bangbg);color:var(--bang);border-color:#eec3bc}
+  .itemMain{flex:1;min-width:0}
+  .itemText{width:100%;border:none;background:transparent;resize:none;padding:5px 4px;border-radius:6px;font-size:14px;line-height:1.5;overflow:hidden;color:var(--ink)}
+  .itemText:hover{background:#f4f1ec}.itemText:focus{outline:2px solid var(--accent);background:#fff}
+  .noteToggle{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;padding:2px 4px;border-radius:5px}
+  .noteToggle:hover{color:var(--accent-ink);background:#eef4f1}.noteToggle .dot{color:var(--accent)}
+  .note{width:100%;border:1px dashed var(--line);background:#fcfbf9;resize:none;padding:6px 8px;border-radius:7px;font-size:13px;line-height:1.5;overflow:hidden;color:#5a554d;margin-top:3px;display:none}
+  .item.showNote .note{display:block}
+  .itemDel{border:none;background:transparent;color:#cfc8be;cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;flex:none}
+  .itemDel:hover{color:var(--bang);background:var(--bangbg)}
+  .addItem{margin:6px 0 2px;background:none;border:1px dashed var(--line);color:var(--muted);cursor:pointer;padding:6px 10px;border-radius:8px;font-size:13px;font-weight:600}
+  .addItem:hover{border-color:var(--accent);color:var(--accent-ink)}
+
+  .marco{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+  .abaTag{font-size:11.5px;font-weight:700;color:var(--muted);background:#f0ede8;border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+  .abaTag.ok{color:var(--E);background:var(--Ebg);border-color:#bfe3d1}
+
+  .footer{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .footer b{color:var(--ink)}
+  .footNote{width:100%;border:none;background:transparent;resize:none;padding:4px;border-radius:6px;font-size:13.5px;color:#4a463f;overflow:hidden}
+  .footNote:hover{background:#f6f3ee}.footNote:focus{outline:2px solid var(--accent);background:#fff}
+  .hint{color:var(--muted);font-size:12.5px;margin:2px 0 10px}
+
+  .aba{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px;margin:10px 0}
+  .abaHead{display:flex;align-items:center;gap:8px}
+  .abaName{flex:1;font-weight:700;font-size:15px;border:none;background:transparent;padding:3px 4px;border-radius:6px;color:var(--ink)}
+  .abaName:hover{background:#f4f1ec}.abaName:focus{outline:2px solid var(--accent);background:#fff}
+  .tipo{font-size:11px;font-weight:700;color:var(--muted);background:#f0ede8;border-radius:6px;padding:3px 7px;flex:none}
+  .abaPapel{width:100%;border:none;background:transparent;resize:none;padding:4px;border-radius:6px;font-size:13.5px;color:#4a463f;overflow:hidden}
+  .abaPapel:hover{background:#f6f3ee}.abaPapel:focus{outline:2px solid var(--accent);background:#fff}
+  .cobertura{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+  .cobLabel{font-size:12.5px;color:var(--muted);font-weight:600}
+  .covChip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;background:#eef1f5;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 9px;color:#3d3a35}
+  .covChip.done{background:var(--Ebg);border-color:#bfe3d1;color:var(--E)}
+  .covChip button{border:none;background:none;cursor:pointer;color:#b3aca2;font-size:12px;padding:0 2px}
+  .covChip button:hover{color:var(--bang)}
+  .noneTxt{color:var(--muted);font-size:12.5px}
+  .coverPick{font-size:12px;border:1px dashed var(--line);border-radius:7px;padding:4px 6px;color:var(--muted);background:var(--panel);cursor:pointer;max-width:190px}
+  .abaState{margin-top:8px;font-size:12.5px;font-weight:700;padding:4px 9px;border-radius:7px;display:inline-block}
+  .abaState.ok{color:var(--E);background:var(--Ebg)}
+  .abaState.wait{color:var(--A);background:var(--Abg)}
+  .abaState.nolink{color:var(--muted);background:#f0ede8}
+
+  .sortable-ghost{opacity:.35}
+  input[type=file]{display:none}
+  body[data-view="backlog"] #view-mapa{display:none}
+  body[data-view="mapa"] #view-backlog{display:none}
+  body[data-view="backlog"] #addAba{display:none}
+  body[data-view="mapa"] #addSection,body[data-view="mapa"] #filterBang{display:none}
+</style>
+
+<div class="wrap">
+  <input id="docTitle" class="titleInput">
+  <input id="docSub" class="subInput">
+
+  <div class="tabs">
+    <div class="tab" id="tabBacklog">Backlog</div>
+    <div class="tab" id="tabMapa">Mapa da Planilha</div>
+  </div>
+  <div class="progress" id="progress"></div>
+
+  <div class="toolbar">
+    <button class="tb primary" id="addSection">+ Seção</button>
+    <button class="tb primary" id="addAba">+ Aba</button>
+    <button class="tb bangfilter" id="filterBang">❗ Só pendências externas (0)</button>
+    <button class="tb" id="expMd">Exportar Markdown</button>
+    <button class="tb" id="expJson">Exportar JSON</button>
+    <button class="tb" id="impBtn">Importar JSON</button>
+    <button class="tb" id="reset">Resetar</button>
+    <input type="file" id="impFile" accept="application/json,.json">
+    <span class="saveState" id="saveState"></span>
+  </div>
+
+  <div id="view-backlog">
+    <div class="hint">Arraste <b>⋮⋮</b> para reordenar. Marque <b>✓</b> quando um item estiver concluído — as abas ligadas a ele (no Mapa) acendem como aposentáveis.</div>
+    <div id="diagram" class="diagram"></div>
+    <div class="legend">
+      <span class="chip E">E</span> existente
+      <span class="chip A">A</span> a adaptar
+      <span class="chip N">N</span> novo
+      <span class="chip P">P</span> processo
+      <span class="chip B">!</span> pendência externa
+      <span class="chip D">✓</span> concluído
+    </div>
+    <div id="sections"></div>
+    <div class="footer"><b>Nota sobre a ordem.</b>
+      <textarea id="footNote" class="footNote" rows="2"></textarea>
+    </div>
+  </div>
+
+  <div id="view-mapa">
+    <div class="hint">Cada aba da planilha da Maely. Em <b>“Coberta por”</b>, vincule ao item ou à seção do backlog que a substitui. Quando o vínculo estiver concluído, a aba fica <b>aposentável</b>.</div>
+    <div id="abas"></div>
+  </div>
+</div>
+
+<script>
+const KEY='projeto_app_v1';
+const uid=()=>'x'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const el=id=>document.getElementById(id);
+
+/* ---------- default data ---------- */
+function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],confirm:!!a[1],done:false,notes:'',text:a[2]}));}
+const DEFAULT_STATE={
+  docTitle:'Documento de Desenvolvimento do Aplicativo',docSub:'Spasso',activeView:'backlog',
+  footNote:'A sequência das seções reflete a dependência lógica entre as frentes, não a ordem de execução. No planejamento de sprints, frentes independentes — como Precificação e Fundação — podem avançar em paralelo.',
+  sections:[
+    {id:'sec-precificacao',title:'Precificação',subtitle:'Geração de preços — módulo independente, de valor imediato',
+     intro:'Trabalho de valor imediato e baixo risco, em boa parte já pronto. A precificação é um contexto isolado: depende apenas de metodologia e de dados de mercado, sem relação com a gestão de posição.',
+     items:mkItems([['A',0,'Limpeza visual do app: ocultar funções inativas e remover interface e código depreciados.'],['E',0,'Conferência da metodologia e do cálculo de preços: Long Basis, Target e NDF.'],['A',0,'Adaptar a publicação e a consulta da Tabela Oficial de Preços na interface.'],['A',0,'Validar e atualizar a ingestão de dados de mercado (CBOT, Milho B3 e câmbio), com carregamento sob demanda.'],['P',0,'Homologação da precificação: operar o app em paralelo com a planilha até a validação matemática completa.']])},
+    {id:'sec-fundacao',title:'Fundação',subtitle:'Entidades primárias e suas relações',
+     intro:'A espinha dorsal do app. Entidades primárias são os dados mestres. Aqui se define o modelo que suporta múltiplas empresas e corretoras e as regras que ligam essas entidades entre si.',
+     items:mkItems([['N',0,'Estruturar o banco de dados para suportar múltiplos Grupos e múltiplas Empresas (CNPJs).'],['N',0,'Desenhar as relações, vínculos e gatilhos entre as entidades primárias.'],['N',0,'Implementar as entidades primárias novas: Grupo, Empresa, Corretora, Conta.'],['A',0,'Adaptar as entidades primárias existentes: Commodity, Produtor/Contraparte, Praça, Safra, Usuário/Cargo.']])},
+    {id:'sec-cadastros',title:'Cadastros',subtitle:'Gestão das entidades primárias (frontend)',
+     intro:'As telas para criar e manter as entidades primárias, com as regras de integridade que impedem cadastros inconsistentes.',
+     items:mkItems([['N',0,'Interfaces de cadastro das entidades primárias.'],['N',0,'Regras de preenchimento e integridade (obrigatórios × opcionais e vínculos).'],['A',0,'Adaptar cadastros já existentes (ex.: Produtor ganha endereço e área de produção).'],['A',0,'Converter Commodity em cadastro aberto (agnóstico), com volume por lote.']])},
+    {id:'sec-captura',title:'Captura',subtitle:'Entidades secundárias e lançamentos de dados (frontend e esquema)',
+     intro:'Entidades secundárias são transacionais. Junto delas vêm os lançamentos — formulários que apenas alimentam uma base. Esta etapa cria essas interfaces e define como o dado entra no sistema.',
+     items:mkItems([['N',0,'Interfaces das entidades secundárias (transacionais).'],['N',0,'Formulários de lançamento (ex.: apontamento de preço físico de praça e preços de MTM).'],['N',0,'Esquema de incorporação dos dados capturados à base: validação, destino e versionamento.'],['N',1,'Integração com o Sankhya (ERP do Grupo Spasso). Depende de decisão e ação da Spasso.']])},
+    {id:'sec-registro',title:'Registro de hedge',subtitle:'Boletagem e conciliação de operações',
+     intro:'Registrar as operações de hedge no app e confrontá-las com o que a corretora reporta.',
+     items:mkItems([['A',0,'Boletagem das operações de bolsa (futuros e opções), imutável, com vínculo de offset (Entrada/Saída).'],['N',0,'Chave única (Trade ID / Contrato StoneX) para impedir duplicidade.'],['A',0,'Registro das operações físicas de Long Basis vinculadas ao derivativo e ao NDF.'],['N',0,'Conciliação entre os registros do app e o extrato da corretora.']])},
+    {id:'sec-posicao',title:'Posição/MTM',subtitle:'Consolidação da posição e marcação a mercado',
+     intro:'Enxergar a posição de forma consolidada e valorizá-la a mercado, com histórico.',
+     items:mkItems([['N',0,'Posição consolidada por qualquer recorte e combinação.'],['A',0,'MTM decomposto (físico + bolsa + dólar) pelo fechamento diário — engine Python.'],['N',0,'Repositório de operações liquidadas com resultado por saca.'],['N',0,'Snapshots temporais diários (posição, MTM, preços, caixa) — histórico.']])},
+    {id:'sec-risco',title:'Risco/contábil',subtitle:'Camada analítica e de saída da operação',
+     intro:'Onde a operação deixa definitivamente as planilhas.',
+     items:mkItems([['N',0,'Exposição (tons, cambial, a basis) e VaR sobre a posição consolidada.'],['N',1,'Política de risco: limites, margem e stress. Dependem da área de risco (Maely).'],['N',0,'Caixa da corretora (liquidações, margem, corretagem, IR) e fluxo de caixa.'],['N',1,'Contábil: hedge accounting e relatório para a Fato. Dependem da contabilidade.']])},
+    {id:'sec-comercial',title:'Comercial',subtitle:'Frente comercial de preços e posições',
+     intro:'Como a equipe comercial interage com preços e posições.',
+     items:mkItems([['A',0,'Boleta de negociação do comercial para a mesa.'],['A',0,'Tabela self-service com carrego integrado para o comercial.'],['N',1,'Visibilidade de posições abertas para o comercial — a validar com o comercial (Reinaldo).']])},
+    {id:'sec-diferidos',title:'Itens diferidos',subtitle:'Baixa prioridade',intro:'',
+     items:mkItems([['A',0,'Basis histórico interpolado: consolidar a origem dos dados em base centralizada.']])},
+  ],
+  abas:[
+    {id:'aba-dms',name:'dms',tipo:'Referência',status:'A',coveredBy:['sec-fundacao'],papel:'Listas de domínio: commodity+bolsa (com volume/lote), calendário, tipos de movimento de caixa e de liquidação.'},
+    {id:'aba-precos-mtm',name:'Preços_MTM',tipo:'Registro',status:'A',coveredBy:['sec-captura'],papel:'Preços de fechamento (bolsa), FX e preço físico por praça — base do MTM.'},
+    {id:'aba-analitico-deriv',name:'Analítico_Deriv',tipo:'Registro',status:'A',coveredBy:['sec-registro'],papel:'Livro de derivativos (futuros/dólar), imutável, com vínculo de offset. Chaves Trade ID / Contrato StoneX.'},
+    {id:'aba-analitico-deriv-op',name:'Analítico_Deriv_Op',tipo:'Registro',status:'N',coveredBy:['sec-registro'],papel:'Livro de opções (Call), vinculado ao derivativo.'},
+    {id:'aba-lb-vig',name:'Op. Long_Basis_Vig',tipo:'Registro',status:'A',coveredBy:['sec-registro'],papel:'Operações físicas de Long Basis vigentes, ligadas a derivativo + NDF.'},
+    {id:'aba-lb-liq',name:'Op. Long_Basis_Liq',tipo:'Registro',status:'A',coveredBy:['sec-registro'],papel:'Operações de Long Basis liquidadas (Entrada/Saída).'},
+    {id:'aba-liquidacoes',name:'Liquidações.Derivativos',tipo:'Registro',status:'N',coveredBy:['sec-posicao'],papel:'Registro de liquidações (offset), resultado em USD/BRL.'},
+    {id:'aba-caixa',name:'Caixa_Corretoras',tipo:'Registro',status:'N',coveredBy:['sec-risco'],papel:'Caixa da corretora: saldo + livro de movimentos (IRRF etc.).'},
+    {id:'aba-precos-mtm2',name:'Din.MTM_LB',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'MTM dinâmico de uma operação Long Basis (resumo por praça/componente).'},
+    {id:'aba-mtm-lb',name:'MTM_LB-Milho-26',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'MTM parcial da operação LB Milho, por praça e por componente.'},
+    {id:'aba-reporte-liq',name:'Reporte_Liq',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'Resultado de uma liquidação por componente (físico/bolsa/dólar), basis e R$/sc.'},
+    {id:'aba-resumo',name:'Resumo_Derivativos',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'Exposição (tons/cambial/basis) e MTM consolidado em R$.'},
+    {id:'aba-evolucao',name:'Evolução_MTM',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'Série diária do MTM Total — histórico (snapshot temporal).'},
+    {id:'aba-var-cambial',name:'Var_Cambial',tipo:'Reporte',status:'N',coveredBy:['sec-risco'],papel:'Movimentações de caixa por tipo, caixa inicial/final, variação cambial.'},
+    {id:'aba-fluxo',name:'Fluxo_Caixa',tipo:'Reporte',status:'N',coveredBy:['sec-risco'],papel:'Projeção de fluxo de caixa por empresa/corretora/commodity/mês.'},
+    {id:'aba-gestao',name:'Gestão_Stonex',tipo:'Reporte',status:'N',coveredBy:['sec-risco'],papel:'Caixa, MTM, net de liquidação, margem, consumo, saldo e stress (limite StoneX).'},
+  ]
+};
+
+let state, sortables=[];
+
+/* ---------- lookups ---------- */
+const getSection=id=>state.sections.find(s=>s.id===id);
+function getItem(id){for(const s of state.sections){const it=s.items.find(i=>i.id===id);if(it)return it;}}
+const getAba=id=>state.abas.find(a=>a.id===id);
+function nodeDone(id){
+  const s=state.sections.find(x=>x.id===id);
+  if(s)return s.items.length>0&&s.items.every(i=>i.done);
+  for(const sec of state.sections){const it=sec.items.find(x=>x.id===id);if(it)return !!it.done;}
+  return false;
+}
+function nodeLabel(id){
+  const s=state.sections.find(x=>x.id===id);if(s)return '▸ '+s.title;
+  for(const sec of state.sections){const it=sec.items.find(x=>x.id===id);if(it)return '• '+(it.text||'item').slice(0,42);}
+  return '(removido)';
+}
+const abaAposentavel=a=>a.coveredBy.length>0&&a.coveredBy.every(nodeDone);
+const coverersOf=nodeId=>state.abas.filter(a=>a.coveredBy.includes(nodeId));
+
+/* ---------- persistence ---------- */
+let saveT;
+const setSaveState=t=>el('saveState').textContent=t;
+function save(){setSaveState('salvando…');clearTimeout(saveT);
+  saveT=setTimeout(async()=>{try{await window.storage.set(KEY,JSON.stringify(state),false);setSaveState('salvo ✓');}
+  catch(e){setSaveState('não salvou aqui — use Exportar');}},350);}
+
+/* ---------- backlog render ---------- */
+function statusOptions(sel){return [['','—'],['E','E'],['A','A'],['N','N'],['P','P']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
+function badgesFor(nodeId){
+  const covs=coverersOf(nodeId);if(!covs.length)return '';
+  return `<div class="marco">${covs.map(a=>{const ok=abaAposentavel(a);
+    return `<span class="abaTag ${ok?'ok':''}" title="${ok?'pode ser abandonada':'aguardando conclusão'}">🗑 ${esc(a.name)}${ok?' ✓':''}</span>`;}).join('')}</div>`;
+}
+function itemHTML(it){
+  return `<div class="item ${it.notes?'showNote':''} ${it.confirm?'hasBang':''} ${it.done?'isDone':''}" data-iid="${it.id}">
+    <input type="checkbox" class="done" data-role="done" ${it.done?'checked':''} title="Concluído">
+    <select class="status ${it.status||''}" data-role="status">${statusOptions(it.status||'')}</select>
+    <button class="bang ${it.confirm?'on':''}" data-role="confirm" title="Pendência externa">!</button>
+    <div class="itemMain">
+      <textarea class="itemText" data-role="text" rows="1">${esc(it.text)}</textarea>
+      ${badgesFor(it.id)}
+      <button class="noteToggle" data-role="noteToggle">${it.notes?'<span class="dot">●</span> nota':'+ nota'}</button>
+      <textarea class="note" data-role="notes" rows="1" placeholder="anotação…">${esc(it.notes)}</textarea>
+    </div>
+    <span class="handle item-handle">⋮⋮</span>
+    <button class="itemDel" data-role="delItem" title="Remover item">✕</button>
+  </div>`;
+}
+function sectionHTML(s){
+  const allDone=s.items.length>0&&s.items.every(i=>i.done);
+  return `<div class="section" data-sid="${s.id}">
+    <div class="secHead">
+      <span class="handle sec-handle">⋮⋮</span>
+      <div class="grow">
+        <div class="secTitleRow">
+          <input class="secTitle" data-role="secTitle" value="${esc(s.title)}" placeholder="Título">
+          ${allDone?'<span class="secDone">✓ concluída</span>':''}
+        </div>
+        <input class="secSub" data-role="secSub" value="${esc(s.subtitle)}" placeholder="subtítulo">
+        <textarea class="secIntro" data-role="secIntro" rows="1" placeholder="introdução…">${esc(s.intro)}</textarea>
+        ${badgesFor(s.id)}
+      </div>
+      <button class="secDel" data-role="delSection" title="Remover seção">🗑</button>
+    </div>
+    <div class="items" data-sid="${s.id}">${s.items.map(itemHTML).join('')}</div>
+    <button class="addItem" data-role="addItem">+ item</button>
+  </div>`;
+}
+function renderBacklog(){
+  el('sections').innerHTML=state.sections.map(sectionHTML).join('');
+  el('footNote').value=state.footNote||'';
+  autosizeAll();initSortables();updateDiagram();updateBangCount();applyFilter();
+}
+function updateDiagram(){
+  const names=state.sections.filter(s=>s.title&&s.title.toLowerCase()!=='itens diferidos').map(s=>esc(s.title));
+  el('diagram').innerHTML=names.length?names.join('<span class="arrow">→</span>'):'<span style="color:var(--muted)">Adicione seções.</span>';
+}
+function updateBangCount(){
+  let n=0;state.sections.forEach(s=>s.items.forEach(i=>{if(i.confirm)n++;}));
+  const on=document.body.classList.contains('filtering');
+  el('filterBang').textContent=on?`Mostrar tudo (${n})`:`❗ Só pendências externas (${n})`;
+}
+function applyFilter(){
+  const on=document.body.classList.contains('filtering');
+  document.querySelectorAll('#sections > .section').forEach(sec=>{sec.style.display=(on&&!sec.querySelector('.item.hasBang'))?'none':'';});
+}
+
+/* ---------- mapa render ---------- */
+function coverOptions(){
+  let o='<option value="">+ vincular…</option>';
+  state.sections.forEach(s=>{
+    o+=`<optgroup label="${esc(s.title)}"><option value="${s.id}">▸ ${esc(s.title)} (seção inteira)</option>`;
+    s.items.forEach(it=>{o+=`<option value="${it.id}">• ${esc((it.text||'item').slice(0,48))}</option>`;});
+    o+='</optgroup>';
+  });
+  return o;
+}
+function abaHTML(a){
+  const apos=abaAposentavel(a),covered=a.coveredBy.length>0;
+  const chips=a.coveredBy.length?a.coveredBy.map(id=>`<span class="covChip ${nodeDone(id)?'done':''}">${esc(nodeLabel(id))}<button data-role="unlink" data-aid="${a.id}" data-node="${id}">✕</button></span>`).join(''):'<span class="noneTxt">— sem vínculo —</span>';
+  return `<div class="aba" data-aid="${a.id}">
+    <div class="abaHead">
+      <span class="handle aba-handle">⋮⋮</span>
+      <input class="abaName" data-role="abaName" value="${esc(a.name)}">
+      <select class="status ${a.status||''}" data-role="abaStatus">${statusOptions(a.status||'')}</select>
+      <span class="tipo">${esc(a.tipo||'')}</span>
+      <button class="itemDel" data-role="delAba" title="Remover aba">✕</button>
+    </div>
+    <textarea class="abaPapel" data-role="abaPapel" rows="1" placeholder="papel / camada…">${esc(a.papel)}</textarea>
+    <div class="cobertura"><span class="cobLabel">Coberta por:</span>${chips}
+      <select class="coverPick" data-role="cover" data-aid="${a.id}">${coverOptions()}</select>
+    </div>
+    <div class="abaState ${apos?'ok':covered?'wait':'nolink'}">${apos?'✓ pode ser abandonada':covered?'aguardando conclusão do vínculo':'sem vínculo definido'}</div>
+  </div>`;
+}
+function renderMapa(){
+  el('abas').innerHTML=state.abas.map(abaHTML).join('');
+  document.querySelectorAll('.abaPapel').forEach(autosize);
+  initAbaSortable();
+}
+function updateProgress(){
+  const total=state.abas.length;
+  const cob=state.abas.filter(a=>a.coveredBy.length>0).length;
+  const apos=state.abas.filter(abaAposentavel).length;
+  el('progress').innerHTML=`Planilha da Maela — <b>${cob}/${total}</b> abas cobertas pelo backlog · <b class="aposN">${apos}</b> aposentáveis`;
+}
+function renderAll(){renderBacklog();renderMapa();updateProgress();}
+
+function autosize(e){if(!e)return;e.style.height='auto';e.style.height=e.scrollHeight+'px';}
+function autosizeAll(){document.querySelectorAll('.secIntro,.itemText,.note,#footNote').forEach(autosize);}
+
+/* ---------- drag ---------- */
+function rebuildBacklogFromDOM(){
+  const secMeta={},itemMap={};
+  state.sections.forEach(s=>{secMeta[s.id]=s;s.items.forEach(it=>itemMap[it.id]=it);});
+  const ns=[];
+  document.querySelectorAll('#sections > .section').forEach(secEl=>{
+    const s=secMeta[secEl.dataset.sid];if(!s)return;const items=[];
+    secEl.querySelectorAll('.items > .item').forEach(itEl=>{const it=itemMap[itEl.dataset.iid];if(it)items.push(it);});
+    s.items=items;ns.push(s);
+  });
+  state.sections=ns;updateDiagram();updateProgress();save();
+}
+function initSortables(){
+  sortables.filter(s=>s._bl).forEach(s=>{try{s.destroy()}catch(e){}});
+  sortables=sortables.filter(s=>!s._bl);
+  if(!window.Sortable)return;
+  const a=Sortable.create(el('sections'),{handle:'.sec-handle',draggable:'.section',animation:150,onEnd:rebuildBacklogFromDOM});a._bl=1;sortables.push(a);
+  document.querySelectorAll('.items').forEach(c=>{const s=Sortable.create(c,{handle:'.item-handle',group:'items',draggable:'.item',animation:150,onEnd:rebuildBacklogFromDOM});s._bl=1;sortables.push(s);});
+}
+function initAbaSortable(){
+  sortables.filter(s=>s._ab).forEach(s=>{try{s.destroy()}catch(e){}});
+  sortables=sortables.filter(s=>!s._ab);
+  if(!window.Sortable)return;
+  const s=Sortable.create(el('abas'),{handle:'.aba-handle',draggable:'.aba',animation:150,onEnd:()=>{
+    const map={};state.abas.forEach(a=>map[a.id]=a);
+    state.abas=[...document.querySelectorAll('#abas > .aba')].map(e=>map[e.dataset.aid]).filter(Boolean);save();
+  }});s._ab=1;sortables.push(s);
+}
+
+/* ---------- backlog events ---------- */
+const S=el('sections');
+S.addEventListener('input',e=>{
+  const r=e.target.dataset.role;
+  if(r==='text'||r==='notes'){const it=getItem(e.target.closest('.item').dataset.iid);if(!it)return;it[r==='text'?'text':'notes']=e.target.value;autosize(e.target);save();}
+  else if(r==='secTitle'||r==='secSub'||r==='secIntro'){const s=getSection(e.target.closest('.section').dataset.sid);if(!s)return;
+    s[r==='secTitle'?'title':r==='secSub'?'subtitle':'intro']=e.target.value;if(r==='secTitle'){updateDiagram();}autosize(e.target);save();}
+});
+S.addEventListener('change',e=>{
+  const r=e.target.dataset.role;
+  if(r==='status'){const it=getItem(e.target.closest('.item').dataset.iid);it.status=e.target.value;e.target.className='status '+(it.status||'');save();}
+  else if(r==='done'){const it=getItem(e.target.closest('.item').dataset.iid);it.done=e.target.checked;renderAll();save();}
+});
+S.addEventListener('click',e=>{
+  const r=e.target.dataset.role;if(!r)return;
+  if(r==='confirm'){const it=getItem(e.target.closest('.item').dataset.iid);it.confirm=!it.confirm;e.target.classList.toggle('on',it.confirm);e.target.closest('.item').classList.toggle('hasBang',it.confirm);updateBangCount();applyFilter();save();}
+  else if(r==='noteToggle'){const item=e.target.closest('.item');item.classList.toggle('showNote');if(item.classList.contains('showNote')){const ta=item.querySelector('.note');autosize(ta);ta.focus();}}
+  else if(r==='delItem'){const s=getSection(e.target.closest('.section').dataset.sid);const iid=e.target.closest('.item').dataset.iid;
+    s.items=s.items.filter(i=>i.id!==iid);state.abas.forEach(a=>a.coveredBy=a.coveredBy.filter(x=>x!==iid));renderAll();save();}
+  else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'',confirm:false,done:false,notes:'',text:''};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
+  else if(r==='delSection'){const sid=e.target.closest('.section').dataset.sid;const s=getSection(sid);
+    if(confirm(`Remover a seção "${s.title||'sem título'}" e seus ${s.items.length} itens?`)){
+      const ids=[sid,...s.items.map(i=>i.id)];state.sections=state.sections.filter(x=>x.id!==sid);
+      state.abas.forEach(a=>a.coveredBy=a.coveredBy.filter(x=>!ids.includes(x)));renderAll();save();}}
+});
+
+/* ---------- mapa events ---------- */
+const AB=el('abas');
+AB.addEventListener('input',e=>{const r=e.target.dataset.role;const a=getAba(e.target.closest('.aba').dataset.aid);if(!a)return;
+  if(r==='abaName'){a.name=e.target.value;}else if(r==='abaPapel'){a.papel=e.target.value;autosize(e.target);}save();});
+AB.addEventListener('change',e=>{const r=e.target.dataset.role;
+  if(r==='abaStatus'){const a=getAba(e.target.closest('.aba').dataset.aid);a.status=e.target.value;e.target.className='status '+(a.status||'');updateProgress();save();}
+  else if(r==='cover'){const a=getAba(e.target.dataset.aid);const v=e.target.value;if(v&&!a.coveredBy.includes(v))a.coveredBy.push(v);renderAll();save();}});
+AB.addEventListener('click',e=>{const r=e.target.dataset.role;if(!r)return;
+  if(r==='unlink'){const a=getAba(e.target.dataset.aid);a.coveredBy=a.coveredBy.filter(x=>x!==e.target.dataset.node);renderAll();save();}
+  else if(r==='delAba'){const a=getAba(e.target.closest('.aba').dataset.aid);if(confirm(`Remover a aba "${a.name}"?`)){state.abas=state.abas.filter(x=>x.id!==a.id);renderMapa();updateProgress();save();}}});
+
+/* ---------- tabs ---------- */
+function setView(v){state.activeView=v;document.body.dataset.view=v;
+  el('tabBacklog').classList.toggle('active',v==='backlog');el('tabMapa').classList.toggle('active',v==='mapa');save();}
+el('tabBacklog').addEventListener('click',()=>setView('backlog'));
+el('tabMapa').addEventListener('click',()=>setView('mapa'));
+
+/* ---------- header / footer ---------- */
+el('docTitle').addEventListener('input',e=>{state.docTitle=e.target.value;save();});
+el('docSub').addEventListener('input',e=>{state.docSub=e.target.value;save();});
+el('footNote').addEventListener('input',e=>{state.footNote=e.target.value;autosize(e.target);save();});
+
+/* ---------- toolbar ---------- */
+el('filterBang').addEventListener('click',()=>{document.body.classList.toggle('filtering');el('filterBang').classList.toggle('active');applyFilter();updateBangCount();});
+el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'',confirm:false,done:false,notes:'',text:''}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
+el('addAba').addEventListener('click',()=>{const a={id:uid(),name:'Nova aba',tipo:'',status:'',coveredBy:[],papel:''};state.abas.push(a);renderMapa();updateProgress();save();const n=document.querySelector(`[data-aid="${a.id}"] .abaName`);if(n){n.focus();n.select();n.scrollIntoView({behavior:'smooth',block:'center'});}});
+el('reset').addEventListener('click',()=>{if(confirm('Resetar para o conteúdo original? Suas edições serão perdidas (exporte antes).')){state=JSON.parse(JSON.stringify(DEFAULT_STATE));boot();save();}});
+function download(name,text,type){const b=new Blob([text],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),400);}
+el('expJson').addEventListener('click',()=>download('documento_projeto.json',JSON.stringify(state,null,2),'application/json'));
+el('expMd').addEventListener('click',()=>download('documento_projeto.md',toMarkdown(),'text/markdown'));
+el('impBtn').addEventListener('click',()=>el('impFile').click());
+el('impFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const obj=JSON.parse(rd.result);if(!obj.sections)throw new Error('sem seções');normalize(obj);state=obj;boot();save();}catch(err){alert('JSON inválido: '+err.message);}e.target.value='';};
+  rd.readAsText(f);});
+
+/* ---------- markdown ---------- */
+function toMarkdown(){
+  const flow=state.sections.filter(s=>s.title&&s.title.toLowerCase()!=='itens diferidos').map(s=>s.title).join(' → ');
+  let md=`# ${state.docTitle}\n**${state.docSub}**\n\n`;
+  md+=`**${flow}**\n\n`;
+  md+='**Legenda:** `[E]` existente · `[A]` a adaptar · `[N]` novo · `[P]` processo · `(!)` pendência externa · `[x]` concluído.\n\n';
+  md+=`## Backlog\n\n`;
+  state.sections.forEach((s,i)=>{
+    md+=`### ${i+1}. ${s.title}\n`;if(s.subtitle)md+=`*${s.subtitle}*\n`;if(s.intro)md+=`\n${s.intro}\n`;
+    const secApos=coverersOf(s.id);if(secApos.length)md+=`\n> 🗑 aposenta (seção): ${secApos.map(a=>a.name).join(', ')}\n`;
+    md+='\n';
+    s.items.forEach(it=>{
+      const ck=it.done?'[x] ':'[ ] ';const bang=it.confirm?'`(!)` ':'';const tag=it.status?`\`[${it.status}]\` `:'';
+      md+=`- ${ck}${bang}${tag}${it.text}\n`;
+      const cov=coverersOf(it.id);if(cov.length)md+=`  - 🗑 aposenta: ${cov.map(a=>a.name).join(', ')}\n`;
+      if(it.notes)md+=`  - _nota: ${it.notes.replace(/\n/g,' ')}_\n`;
+    });
+    md+='\n';
+  });
+  md+=`---\n\n**Nota sobre a ordem.** ${state.footNote}\n\n`;
+  md+=`## Mapa da Planilha (${state.abas.length} abas)\n\n`;
+  md+=`| Aba | Status | Tipo | Coberta por | Aposentável |\n|---|---|---|---|---|\n`;
+  state.abas.forEach(a=>{
+    const cov=a.coveredBy.map(id=>nodeLabel(id)).join('; ')||'—';
+    md+=`| ${a.name} | ${a.status||'—'} | ${a.tipo||''} | ${cov} | ${abaAposentavel(a)?'✓ sim':'não'} |\n`;
+  });
+  return md;
+}
+
+/* ---------- boot ---------- */
+function normalize(o){
+  o.activeView=o.activeView||'backlog';
+  (o.sections||[]).forEach(s=>{s.id=s.id||uid();(s.items||[]).forEach(i=>{i.id=i.id||uid();if(i.done===undefined)i.done=false;if(i.confirm===undefined)i.confirm=false;if(i.notes===undefined)i.notes='';});});
+  if(!o.abas)o.abas=JSON.parse(JSON.stringify(DEFAULT_STATE.abas));
+  o.abas.forEach(a=>{a.id=a.id||uid();if(!Array.isArray(a.coveredBy))a.coveredBy=[];if(a.papel===undefined)a.papel='';});
+}
+function boot(){
+  el('docTitle').value=state.docTitle||'';el('docSub').value=state.docSub||'';
+  setView(state.activeView||'backlog');
+  renderAll();autosize(el('footNote'));
+}
+async function load(){
+  let loaded=null;
+  try{const r=await window.storage.get(KEY,false);if(r&&r.value)loaded=JSON.parse(r.value);}catch(e){}
+  if(loaded)normalize(loaded);
+  state=loaded||JSON.parse(JSON.stringify(DEFAULT_STATE));
+  boot();setSaveState(loaded?'salvo ✓':'');
+}
+load();
+</script>
