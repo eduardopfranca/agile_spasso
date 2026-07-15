@@ -12,17 +12,19 @@
 
 **Stack:** hospedagem no **Cloudflare Pages**, persistência em **Cloudflare Worker + KV**. Tudo no plano grátis, isolado do Supabase (que está lotado).
 
+**Status geral: Fases 0, 1 e 2 concluídas e no ar.** Este documento permanece como referência de arquitetura e como registro do planejamento original — as seções de fases abaixo foram atualizadas para refletir o que foi de fato entregue.
+
 ---
 
 ## 2. Arquitetura
 
 ```
-Navegador (o HTML de hoje, ajustado)
+Navegador (index.html)
    │  GET  /doc  → lê o JSON do documento
    │  POST /doc  → grava (com checagem de versão)
    ▼
-Cloudflare Worker  ──►  KV  (1 chave: "documento" = { version, data })
-Cloudflare Pages   ──►  serve o HTML estático
+Cloudflare Worker (agile-spasso-api)  ──►  KV agile-spasso-storage  (1 chave: "documento" = { version, data })
+Cloudflare Pages (agile-spasso.pages.dev)  ──►  serve o HTML estático
 ```
 
 - **Uma** peça de backend (o Worker, ~30 linhas), criada uma vez e esquecida.
@@ -39,43 +41,49 @@ O KV guarda **um envelope** com versão, e dentro dele o documento:
 {
   "version": 12,
   "data": {
-    "docTitle": "...", "docSub": "...", "activeView": "backlog",
+    "docTitle": "...", "docSub": "...", "activeView": "sprints",
     "lastEditedBy": "Edu", "lastEditedTs": "2026-07-14T10:30:00Z",
     "sections": [
       { "id": "...", "title": "...", "subtitle": "...", "intro": "...",
         "items": [
           { "id": "...", "status": "N", "confirm": false, "done": false,
             "text": "...",
-            "sprintId": null,                       // Fase 2: a qual sprint foi levado
-            "notes": [                              // Fase 1: notas autoradas
-              { "author": "Maely", "ts": "...", "text": "..." }
+            "sprintId": null,
+            "urgency": "media",
+            "pendingResolved": false,
+            "notes": [
+              { "id": "...", "author": "Maely", "ts": "...", "text": "..." }
             ] }
         ] }
     ],
     "abas": [ { "id": "...", "name": "...", "status": "...", "tipo": "...",
                "coveredBy": ["sec-id"], "papel": "..." } ],
     "footNote": "...",
-    "pendencias": [                                 // Fase 1
-      { "id": "...", "title": "...", "desc": "...", "author": "...",
-        "ts": "...", "status": "aberta" }
+    "pendingItems": [
+      { "id": "...", "origin": "standalone", "title": "...", "description": "...",
+        "author": "...", "createdAt": "...", "status": "open", "urgency": "alta" }
     ],
-    "sprints": [                                    // Fase 2
+    "sprints": [
       { "id": "...", "name": "Sprint 1", "goal": "...", "start": "...",
-        "end": "...", "status": "ativo" }
+        "end": "...", "status": "active" }
     ]
   }
 }
 ```
 
-**Mudança em relação ao doc atual:** `notes` deixa de ser texto e vira **lista de entradas autoradas**. Na primeira carga, uma nota antiga (string) é convertida em uma entrada `{author:"—", ts:now, text:<string>}`. Os campos `pendencias`, `sprints` e `sprintId` entram nas Fases 1–2; até lá, ficam vazios.
+**Notas:** `notes` é lista de entradas autoradas (não mais texto solto). Notas antigas em formato texto migram automaticamente para uma entrada única no `normalize()`, com timestamp de época (para ordenar como as mais antigas).
 
-Guardar o documento inteiro como **um JSON** (em vez de normalizar em tabelas) é a escolha certa para um time de 3–5 pessoas. Normalizar só se a edição simultânea doer de verdade — não antes.
+**Pendências:** duas origens numa lista só. Itens do backlog com `confirm===true` aparecem derivados (não duplicados em `pendingItems`); resolver marca `pendingResolved=true` e limpa `confirm`, mas o item **continua no histórico** — só sai da visão padrão (que mostra apenas as abertas) até alguém pedir "mostrar tudo". Entradas avulsas vivem de fato em `pendingItems[]`. Urgência (`baixa`/`media`/`alta`) existe nas duas origens.
+
+**Sprints:** `sprintId` no item aponta pro sprint; ao deletar um sprint, os itens ligados voltam a `sprintId: null` — nunca ficam com referência quebrada.
+
+Guardar o documento inteiro como **um JSON** (em vez de normalizar em tabelas) continua sendo a escolha certa para um time de 3–5 pessoas. Normalizar só se a edição simultânea doer de verdade — não antes.
 
 ---
 
 ## 4. O Worker (persistência + concorrência)
 
-Código completo, pronto pra colar. Binding do KV chamado `DOC`.
+Já implementado e publicado como `agile-spasso-api`, com o KV vinculado como `DOC` (namespace `agile-spasso-storage`).
 
 ```js
 const KEY = "documento";
@@ -117,29 +125,28 @@ function json(body, status = 200) {
 }
 ```
 
-**Concorrência (otimista):** quem grava manda a versão que tinha. Se o servidor já está numa versão mais nova (alguém salvou antes), retorna **409**. O cliente então avisa: *"O [Fulano] salvou antes de você — recarregue para pegar a versão atual."* Simples e suficiente.
+**Concorrência (otimista):** quem grava manda a versão que tinha. Se o servidor já está numa versão mais nova (alguém salvou antes), retorna **409**. O cliente avisa e pede para recarregar. Simples e suficiente.
 
 ---
 
-## 5. Ajuste no HTML (Fase 0 — obrigatório)
+## 5. Ajuste no HTML (Fase 0 — concluída)
 
-O HTML atual salva via `window.storage`, que **só existe no ambiente de artifact do Claude**. Numa página real, isso não existe. Troca-se por `fetch` ao Worker + `localStorage` para o nome.
+`index.html` salva via `fetch` no Worker (`https://agile-spasso.mesaagro.workers.dev`) e guarda o nome do autor em `localStorage`. O debounce de salvamento e a checagem de versão seguem a mesma lógica descrita originalmente:
 
 ```js
-const API = "https://SEU-WORKER.SEU-SUBDOMINIO.workers.dev";
+const API = "https://agile-spasso.mesaagro.workers.dev";
 let docVersion = 0;
 
-// nome do autor (uma vez por navegador)
 let author = localStorage.getItem("autor");
 if (!author) { author = (prompt("Seu nome:") || "").trim(); localStorage.setItem("autor", author); }
 
-async function loadRemote() {
+async function load() {
   const { version, data } = await (await fetch(API + "/doc")).json();
   docVersion = version;
   state = data || defaultState();
 }
 
-async function saveRemote() {
+async function save() {
   state.lastEditedBy = author; state.lastEditedTs = new Date().toISOString();
   const r = await fetch(API + "/doc", {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -150,32 +157,32 @@ async function saveRemote() {
 }
 ```
 
-`saveRemote()` entra no lugar do `save()` atual (mantendo o debounce). O resto do app — render, drag, tudo — não muda.
-
 ---
 
-## 6. Passo a passo de setup (Cloudflare)
+## 6. Passo a passo de setup (Cloudflare) — já executado
 
-1. **Conta Cloudflare** (grátis).
-2. **KV namespace:** painel → *Workers & Pages* → *KV* → *Create a namespace* (ex.: `documento-kv`).
-3. **Worker:** *Workers & Pages* → *Create* → *Worker* → colar o código da seção 4 → *Deploy*. Anotar a URL (`...workers.dev`).
-4. **Ligar o KV ao Worker:** no Worker → *Settings* → *Variables and Secrets* → *KV Namespace Bindings* → adicionar binding com nome **`DOC`** apontando para `documento-kv`. Re-deploy.
-5. **Testar:** abrir `SUA-URL/doc` no navegador → deve retornar `{"version":0,"data":null}`.
-6. **Ajustar o HTML:** aplicar a seção 5 (colar a URL do Worker no `API`).
-7. **Publicar no Cloudflare Pages:** *Workers & Pages* → *Create* → *Pages* → conectar o repositório do GitHub (ou upload direto do arquivo). Cada push publica automaticamente. Sai um link `...pages.dev`.
-8. **Pronto.** Compartilhar o link com o time. Cada pessoa digita o nome uma vez.
+1. Conta Cloudflare (Spasso).
+2. **KV namespace:** `agile-spasso-storage`.
+3. **Worker:** `agile-spasso-api`, código da seção 4.
+4. **Binding:** `DOC` → `agile-spasso-storage`.
+5. Testado: `GET /doc` retorna `{"version":0,"data":null}` antes do primeiro save.
+6. HTML (`index.html`) ajustado com a URL real do Worker.
+7. **Cloudflare Pages** conectado ao repositório GitHub `eduardopfranca/agile_spasso`, branch `main`. Cada push publica automaticamente.
+8. Link publicado: **`agile-spasso.pages.dev`**.
 
 ---
 
 ## 7. Fases
 
-**Fase 0 — Base no ar.** Worker + KV + Pages; troca de `window.storage` por `fetch`; nome do autor. Ao fim disto, o app já é compartilhado e multiusuário. *(O grosso é wiring; a lógica do app não muda.)*
+**Fase 0 — Base no ar. ✅ Concluída.** Worker + KV + Pages; persistência real; nome do autor.
 
-**Fase 1 — Notas autoradas + Pendências.** `notes` vira lista de entradas `{autor, data, texto}` (pequeno histórico por item). Nova visão simples de **Pendências** (título, descrição, autor, aberta/resolvida).
+**Fase 1 — Notas autoradas + Pendências. ✅ Concluída.** `notes` é lista de entradas autoradas com histórico. Visão **Itens Pendentes** consolidando o `(!)` do backlog com entradas avulsas, com estado aberta/resolvida preservando histórico (visão padrão mostra só as abertas) e classificação de **urgência** (baixa/média/alta) — este último item não estava no escopo original desta fase e foi adicionado durante a implementação.
 
-**Fase 2 — Sprints.** Criar sprints (nome, objetivo, datas, status). Botão **"levar pro sprint"** em cada item (define `sprintId`). Visão *Sprint* que agrupa os itens levados e mostra progresso (X/Y concluídos) — reaproveitando o `✓ concluído` que já existe.
+**Fase 2 — Sprints. ✅ Concluída.** Sprints com nome, objetivo, datas e status. Cada item do backlog pode ser levado a um sprint (`sprintId`), com badge clicável de volta e para a frente. A visão *Sprints* mostra os itens levados (os mesmos objetos do Backlog, não cópias) com progresso (X/Y concluídos).
 
-**Fase 3 — Só se precisar.** Feed de atividade "quem fez o quê" consolidado; **Cloudflare Access** (login por e-mail) se quiser trancar o acesso; normalizar dados em tabelas se a concorrência doer. Nada disto de forma preventiva.
+**Adicional — Retrospectivas. ✅ Concluída (fora do escopo original das Fases 1–3).** Aba somente-leitura que renderiza arquivos Markdown de `retrospectives/YYYYMMDD.md` direto do GitHub (API pública, sem autenticação), com data em formato brasileiro por extenso e a entrada mais recente expandida por padrão. Adicionar uma retrospectiva é só commitar um novo arquivo — sem UI de criação no app, por design (garante que só quem tem acesso ao repositório escreve retrospectivas).
+
+**Fase 3 — Só se precisar.** Feed de atividade "quem fez o quê" consolidado; **Cloudflare Access** (login por e-mail) se quiser trancar o acesso; normalizar dados em tabelas se a concorrência doer. Nada disto de forma preventiva — segue não implementado, por decisão consciente.
 
 ---
 
@@ -185,15 +192,20 @@ async function saveRemote() {
 - O endpoint do Worker é público. Se um dia precisar trancar: **Cloudflare Access** protege tanto o Pages quanto o Worker por e-mail, sem reescrever nada.
 - Concorrência é otimista (aviso de versão), não colaboração em tempo real. Para poucos editores, é o suficiente.
 - CORS está aberto (`*`) para simplificar; depois dá para restringir ao domínio do Pages.
+- Retrospectivas usa a API pública do GitHub sem autenticação (limite de 60 requisições/hora); o app busca uma vez por carregamento de página e mantém em cache na memória, evitando reconsultas a cada renderização.
 
 ---
 
 ## 9. Checklist de execução
 
-- [ ] Conta Cloudflare criada
-- [ ] KV namespace `documento-kv`
-- [ ] Worker publicado + binding `DOC`
-- [ ] `GET /doc` respondendo
-- [ ] HTML ajustado (persistência + nome) com a URL do Worker
-- [ ] Repositório conectado ao Cloudflare Pages
-- [ ] Link publicado e testado com 2 pessoas
+- [x] Conta Cloudflare criada
+- [x] KV namespace `agile-spasso-storage`
+- [x] Worker `agile-spasso-api` publicado + binding `DOC`
+- [x] `GET /doc` respondendo
+- [x] HTML ajustado (persistência + nome) com a URL do Worker
+- [x] Repositório conectado ao Cloudflare Pages
+- [x] Link publicado (`agile-spasso.pages.dev`) e testado
+- [x] Fase 1 — notas autoradas + pendências (com urgência)
+- [x] Fase 2 — sprints
+- [x] Retrospectivas (adicional)
+- [ ] Fase 3 — não iniciada (por decisão consciente, não pendência)
