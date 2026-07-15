@@ -1,8 +1,8 @@
 {
-  "name": "doc-api",
+  "name": "agile-spasso-api",
   "main": "src/index.js",
   "compatibility_date": "2025-01-01",
   "kv_namespaces": [
-    { "binding": "DOC", "id": "COLE_AQUI_O_ID_DO_SEU_doc-kv" }
+    { "binding": "DOC", "id": "b5eb945628964d999a8b0d084bebb302" }
   ]
 }
