@@ -16,7 +16,7 @@ Registro de sessão de trabalho: o que foi feito, quais decisões foram tomadas,
 ```markdown
 # [Título curto e descritivo do dia/sessão]
 
-**Descrição rápida:** uma ou duas frases — o suficiente pra bater o olho e saber do que se trata sem ler tudo.
+**Descrição:** uma ou duas frases — o suficiente pra bater o olho e saber do que se trata sem ler tudo.
 
 ## Relato do dia
 
