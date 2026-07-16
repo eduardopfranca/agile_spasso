@@ -103,12 +103,15 @@
   input[type=file]{display:none}
   body:not([data-view="sprints"]) #view-sprints{display:none}
   body:not([data-view="backlog"]) #view-backlog{display:none}
+  body:not([data-view="marcos"]) #view-marcos{display:none}
   body:not([data-view="mapa"]) #view-mapa{display:none}
   body:not([data-view="pending"]) #view-pending{display:none}
+  body:not([data-view="notas"]) #view-notas{display:none}
   body:not([data-view="retro"]) #view-retro{display:none}
   body:not([data-view="backlog"]) #addSection{display:none}
   body:not([data-view="backlog"]) #filterBang{display:none}
   body:not([data-view="sprints"]) #addSprint{display:none}
+  body:not([data-view="marcos"]) #addMarco{display:none}
   body:not([data-view="pending"]) #addPendingItem{display:none}
   body:not([data-view="pending"]) #filterPending{display:none}
   body:not([data-view="pending"]) #filterUrgency{display:none}
@@ -212,6 +215,19 @@
   .retroBody h1,.retroBody h2,.retroBody h3,.docBody h1,.docBody h2,.docBody h3{font-size:16px;margin:10px 0 4px}
   .retroBody code,.docBody code{background:#f0ede8;border-radius:4px;padding:1px 5px;font-size:12.5px}
   .retroBody pre,.docBody pre{background:#f6f3ee;border-radius:8px;padding:8px;overflow:auto}
+
+  /* milestones */
+  .milestoneCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+  .milestoneCard.completed{border-left:3px solid var(--E);background:#f3f9f5}
+  .milestoneHead{display:flex;align-items:center;gap:8px}
+  .milestoneTitle{flex:1;font-weight:700;font-size:15px;border:none;background:transparent;padding:3px 4px;border-radius:6px;color:var(--ink)}
+  .milestoneTitle:hover{background:#f4f1ec}
+  .milestoneTitle:focus{outline:2px solid var(--accent);background:#fff}
+
+  /* notas tab */
+  .notesAddRow{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .noteRow{margin-bottom:8px}
+  .noteAddress{color:var(--accent-ink);font-weight:700}
 </style>
 
 <div class="wrap">
@@ -224,6 +240,7 @@
     <div class="toolbar">
       <button class="tb primary" id="addSection">+ Seção</button>
       <button class="tb primary" id="addSprint">+ Sprint</button>
+      <button class="tb primary" id="addMarco">+ Marco</button>
       <button class="tb primary" id="addPendingItem">+ Novo item pendente</button>
       <button class="tb bangfilter" id="filterBang">❗ Só pendências externas (0)</button>
       <button class="tb" id="filterPending">Mostrar apenas abertas</button>
@@ -260,6 +277,11 @@
     </div>
   </div>
 
+  <div id="view-marcos">
+    <div class="hint">Marcos representam entregas substitutas das abas da planilha. Marcá-los como concluído aqui é manual e livre em ambas as direções, exceto quando o sprint vinculado é marcado como Concluído (ver aba Sprints).</div>
+    <div id="marcosList"></div>
+  </div>
+
   <div id="view-mapa">
     <div class="docToolbar"><button class="tb" id="toggleDocMode">Editar</button></div>
     <div id="sheetDocView" class="docBody"></div>
@@ -283,6 +305,16 @@
     <div id="pendingList"></div>
   </div>
 
+  <div id="view-notas">
+    <div class="hint">Todas as notas do documento, da mais recente para a mais antiga. Respostas a notas são criadas a partir do local onde a nota vive, não aqui.</div>
+    <div class="notesAddRow">
+      <select class="filterSelect" id="notesTargetPick"></select>
+      <input class="noteInput" id="notesAddInput" placeholder="escrever nota…">
+      <button class="noteAddBtn" id="notesAddBtn">+</button>
+    </div>
+    <div id="notasList"></div>
+  </div>
+
   <div id="view-retro">
     <div id="retroList"></div>
   </div>
@@ -299,8 +331,10 @@ function extractIdTs(id){const ms=parseInt((id||'').slice(8),36);return isNaN(ms
 const VIEWS=[
   {id:'sprints',label:'Sprints'},
   {id:'backlog',label:'Backlog'},
+  {id:'marcos',label:'Marcos'},
   {id:'mapa',label:'Mapa da Planilha'},
   {id:'pending',label:'Itens Pendentes'},
+  {id:'notas',label:'Notas'},
   {id:'retro',label:'Retrospectivas'}
 ];
 
@@ -353,7 +387,18 @@ const DEFAULT_STATE={
   notes:[],
   sheetMappingDoc:'# Mapeamento da Planilha da Maely — `Controle_Derivativos.xlsx`\n\n> **Objetivo:** a planilha é o alvo funcional. Tudo que ela **registra** e **reporta** o app precisa passar a fazer, mantendo **log** (quem/quando/o quê) e **histórico** (estado ao longo do tempo).\n> Status: `[E]` existe · `[A]` a adaptar · `[N]` novo · `(!)` pendência externa. · Revisão: 13/jul/2026, lida diretamente do arquivo.\n\n---\n\n## 1. O que a planilha é\n\nControle completo de hedge da **Intergrãos** (grupo Spasso), operando via **StoneX**, em **Soja e Milho** (CBOT e BMF) com **perna de dólar/NDF**. Cobre:\n\n- **Registro** de cada operação de bolsa (futuros e opções) e de cada operação física de Long Basis, com vínculo entre elas.\n- **Cálculo** de MTM diário decomposto em **físico + bolsa + dólar**, custos de carrego, exposição, stress e margem.\n- **Reporte** de posição consolidada, resultado de liquidações, caixa da corretora, variação cambial, fluxo de caixa e gestão de limite/margem.\n\nAs 16 abas se dividem em **domínio/referência**, **registro (captura)**, **cálculo** e **reporte**.\n\n---\n\n## 2. As 16 abas e seus papéis\n\n| Aba | Papel | Camada no app | Registro/Reporte | Status |\n|---|---|---|---|---|\n| `dms` | Listas de domínio: commodity+bolsa (com volume/lote), calendário, tipos de movimento de caixa, tipos de liquidação | Entidades primárias + enums | Registro | A |\n| `Preços_MTM` | Preços de fechamento (bolsa), FX (dólar) e preço físico por praça | Lançamento (captura de preços) | Registro | A |\n| `Analítico_Deriv` | Livro de derivativos: cada operação de bolsa (futuro/dólar), imutável, com vínculo de offset | Entidade secundária (Derivativo) + cálculo MTM | Registro + cálculo | A/N |\n| `Analítico_Deriv_Op` | Livro de opções (Call), vinculado ao derivativo | Entidade secundária (Opção) + cálculo MTM | Registro + cálculo | N |\n| `Op. Long_Basis_Vig` | Operações físicas de Long Basis **vigentes**, ligadas a derivativo + NDF | Entidade secundária (Operação física) + cálculo | Registro + cálculo | A |\n| `Op. Long_Basis_Liq` | Operações de Long Basis **liquidadas** (Entrada/Saída) | Idem, estado liquidado | Registro + cálculo | A |\n| `Liquidações.Derivativos` | Registro de liquidações (offset), resultado em USD/BRL | Entidade secundária (Liquidação) | Registro | N |\n| `Caixa_Corretoras` | Caixa da corretora: saldo + livro de movimentos (IRRF, etc.) | Entidade secundária (Movimento de caixa) | Registro + cálculo | N |\n| `MTM_LB-Milho-26` / `Din.MTM_LB` | MTM parcial de uma operação Long Basis, por praça e por componente | Relatório de MTM por operação | Reporte | N |\n| `Reporte_Liq` | Resultado de uma liquidação por componente (físico/bolsa/dólar), basis e R$/sc | Relatório de liquidação | Reporte | N |\n| `Resumo_Derivativos` | Exposição (tons), exposição cambial (USD), exposição a basis, MTM consolidado (R$) | Dashboard de posição/exposição | Reporte | N |\n| `Evolução_MTM` | Série diária do MTM Total | Histórico (snapshot temporal) | Reporte + histórico | N |\n| `Var_Cambial` | Movimentações de caixa por tipo, caixa inicial/final, variação cambial | Relatório de caixa e variação cambial | Reporte | N |\n| `Fluxo_Caixa` | Projeção de fluxo de caixa por empresa/corretora/commodity/mês | Relatório de fluxo de caixa | Reporte | N |\n| `Gestão_Stonex` | Caixa, MTM, net de liquidação, margem inicial/variação, consumo, saldo, stress | Gestão de limite e margem (risco) | Reporte | N |\n\n---\n\n## 3. Entidades primárias (dados mestres)\n\nConfirmadas pela planilha, alimentam os cadastros da Fundação:\n\n- **Empresa** `[A]` — multi-empresa confirmado: aparecem filiais/CNPJs distintos ("Intergrãos MT", "Intergrãos MG", "Intergran MG", "Intergran GO").\n- **Corretora** `[N]` — StoneX (com conta associada à empresa).\n- **Commodity + Bolsa** `[A]` — Soja/CBOT, Milho/BMF, Milho/CBOT, Dólar/BMF; cada par tem **volume por lote** (ex.: Soja CBOT ≈ 136.078 kg, Milho BMF = 27.000 kg). Vira registry (agnóstico).\n- **Praça/Unidade** `[A]` — Confresa e Matupa (MT), Sacramento (MG).\n- **Contraparte** `[A]` — produtores (pessoa física/jurídica) na compra e tradings (ex.: LDC) na venda. Estender o cadastro de Produtor para "Contraparte".\n- **Safra** `[A]` — Safra Atual / Safra Próxima (vira dimensão).\n- **Calendário** `[A]` — dimensão de datas (dia/mês/ano) usada para agrupar comissão, fluxo e liquidação.\n\n**Enums** (listas de `dms`): tipos de movimento de caixa (envio de recurso próprio, juros de limite, prêmio de opção, reversão, saque, selldown, transferência interna, IRRF); tipos de liquidação (offset antecipado / por vencimento).\n\n---\n\n## 4. Entidades secundárias (transacionais)\n\n- **Derivativo** (`Analítico_Deriv`, IDs `F1…F24`) `[A]` — campos-chave: Data Hedge, Status Extrato (Vigente/Liquidado), Commodity, Safra, **Movimento (Entrada/Saída)**, **Vínculo** (IDs que a saída zera), **Trade ID** e **Contrato** (chaves únicas StoneX), Empresa, Corretora, Operação (Compra/Venda), Estratégia (Futuro/Opção), N° Lotes, Bolsa, Referência (ticker), Strike, Data Expiração/Vencimento, Notional USD, Operação Vinculada (ex.: LB-Soja-26).\n  - **Modelo idêntico ao do app:** operação imutável; a Saída referencia as Entradas que liquida (ex.: `F8` zera `F2;F3;F4;F5;F6`). Reaproveita a imutabilidade + vínculo já existentes em ordens.\n- **Opção** (`Analítico_Deriv_Op`, `O#`) `[N]` — Call, com Strike, Data de Expiração, Preço, FV, MTM; vinculada ao derivativo.\n- **Operação física / Long Basis** (`Op. Long_Basis_*`, `LB#`) `[A]` — liga contraparte + praça + volume + preço negociado ao derivativo (`ID Derivativo Commo`) e ao NDF; carrega o MTM decomposto e os custos.\n- **Liquidação** (`Liquidações.Derivativos`) `[N]` — volume, data, taxa BRL/USD, liquidação USD/BRL, IDs vinculados, tipo de liquidação.\n- **Movimento de caixa da corretora** (`Caixa_Corretoras`) `[N]` — data, empresa, corretora, valor USD/BRL, tipo de movimentação, origem/destino.\n\n---\n\n## 5. Lançamentos (captura que popula bases, não são entidades)\n\n- **Preços de MTM** (`Preços_MTM`) `[A]` — três origens num mesmo lançamento: (a) cotação de bolsa por ticker (FV), (b) FX/dólar, (c) **preço físico por praça** (commodity × safra × praça → preço, com vencimento). Alimenta todo o cálculo de MTM.\n\n---\n\n## 6. Cálculos (viram engines Python — nunca no front, P07)\n\nAs fórmulas da planilha são a especificação. Principais motores a extrair:\n\n- **MTM decomposto** `[A/N]` — Físico + Bolsa + Dólar → Total; e MTM por saca. Regras diferem por bolsa (CBOT vs BMF) e moeda (BRL vs USD).\n- **Custos de carrego** `[A]` — custo financeiro (juros do período sobre o preço) + outros custos (custos por saca). Já existe modelo de custo/carrego na precificação; reconciliar.\n- **Exposição** `[N]` — em tons, cambial (USD, CBOT + NDF) e a basis, por empresa/safra/natureza.\n- **Conversões** `[A]` — kg ↔ sacas (÷60) ↔ lotes ↔ tons; notional; exposição em kg.\n- **Basis** `[A]` — basis de entrada, basis atual e evolução do basis (liga ao histórico de basis que o app já tem).\n- **Stress / risco** `[N]` — choque por chave commodity+bolsa; MTM sob stress; base para VaR.\n- **Margem** `[N]` — margem inicial/variação, consumo, saldo disponível, margeamento (gestão de limite StoneX).\n\n---\n\n## 7. Relatórios (o "reportar tudo")\n\nCada um vira uma visão consolidada no app, calculada a partir dos registros:\n\n- **Posição e exposição** (`Resumo_Derivativos`): exposição em tons, cambial e a basis; MTM em R$ por produto/safra.\n- **MTM por operação** (`MTM_LB-*`, `Din.MTM_LB`): MTM e custo por saca, por praça e por componente.\n- **Resultado de liquidação** (`Reporte_Liq`): resultado por componente, basis entrada/saída, R$/sc.\n- **Caixa e variação cambial** (`Var_Cambial`, `Caixa_Corretoras`): movimentos por tipo, caixa inicial/final, variação passiva/ativa.\n- **Fluxo de caixa** (`Fluxo_Caixa`): projeção por empresa/commodity/mês.\n- **Gestão de limite/margem** (`Gestão_Stonex`): net de liquidação, margem, saldo, stress.\n\n---\n\n## 8. Log e histórico — requisito central\n\nHoje a planilha **não tem trilha** e tem só um histórico manual e parcial (`Evolução_MTM`, snapshot diário do MTM Total). No app, separam-se em duas coisas:\n\n- **Log (auditoria)** `[E/A]` — quem/quando/o quê em cada registro e alteração. O app já tem o padrão `ActivityLog`; estender a todas as tabelas transacionais desta planilha.\n- **Histórico (snapshots temporais)** `[N]` — para reconstruir qualquer data, o app precisa **fotografar diariamente** posição, MTM (por componente), preços de MTM, caixa e margem. `Evolução_MTM` é o embrião disso, feito à mão; no app vira captura automática/versionada. Implica tabelas temporais (snapshot por data) para posição, MTM, preços e caixa.\n- **Imutabilidade** `[E]` — operações não são editadas; correção/zeragem cria nova operação vinculada. A planilha já opera assim (Entrada/Saída + Vínculo), e o app também — preserva histórico por design.\n\n---\n\n## 9. Como encaixa no backlog\n\n| Seção do backlog | O que a planilha detalha |\n|---|---|\n| Fundação / Cadastros | Empresa (multi-CNPJ), Corretora, Conta, Commodity+Bolsa (com lote), Praça, Contraparte, Safra |\n| Captura | Livros de derivativo/opção/Long Basis, liquidações, caixa, lançamento de preços de MTM |\n| Registro de hedge | `Analítico_Deriv` (boletagem, chaves StoneX, Entrada/Saída+Vínculo); conciliação = Status Extrato vs. extrato StoneX |\n| Posição/MTM | `Resumo_Derivativos`, engines de MTM, `Evolução_MTM` (histórico) |\n| Risco/contábil | `Gestão_Stonex` (margem/stress), exposição, VaR; `Var_Cambial` |\n| Caixa | `Caixa_Corretoras`, `Fluxo_Caixa` |\n\n---\n\n## 10. Pendências externas `(!)`\n\n- **Parâmetros de risco/margem/stress** — margem inicial/variação (hoje fixas em USD 250.000), choques de stress por commodity, limites: dependem da área de risco (Maely).\n- **Regras de custo de carrego** — os coeficientes por saca e a taxa de juros usados nos custos precisam ser confirmados como política (Maely).\n- **Integração Sankhya** — posição física e contrapartes podem vir do ERP; depende de decisão/ação da Spasso.\n- **Contábil** — tratamento contábil das liquidações e do IRRF, e reporte à Fato: depende da contabilidade.\n',
   sprints:[],
-  pendingItems:[]
+  pendingItems:[],
+  milestones:[
+    {id:uid(),title:'Cadastro de entidades primárias e domínios',description:'Substitui a aba dms da planilha da Maely.',completed:false,sprintId:null},
+    {id:uid(),title:'Lançamento de preços de mercado e físico',description:'Substitui a aba Preços_MTM.',completed:false,sprintId:null},
+    {id:uid(),title:'Boletagem de derivativos e opções',description:'Substitui as abas Analítico_Deriv e Analítico_Deriv_Op.',completed:false,sprintId:null},
+    {id:uid(),title:'Registro de operações físicas de Long Basis',description:'Substitui as abas Op. Long_Basis_Vig e Op. Long_Basis_Liq.',completed:false,sprintId:null},
+    {id:uid(),title:'Registro de liquidações de derivativos',description:'Substitui a aba Liquidações.Derivativos.',completed:false,sprintId:null},
+    {id:uid(),title:'Relatórios de MTM, posição e liquidação',description:'Substitui as abas Din.MTM_LB, MTM_LB-Milho-26, Reporte_Liq e Resumo_Derivativos.',completed:false,sprintId:null},
+    {id:uid(),title:'Histórico diário de MTM',description:'Substitui a aba Evolução_MTM.',completed:false,sprintId:null},
+    {id:uid(),title:'Caixa, variação cambial e fluxo de caixa',description:'Substitui as abas Caixa_Corretoras, Var_Cambial e Fluxo_Caixa.',completed:false,sprintId:null},
+    {id:uid(),title:'Gestão de margem e stress',description:'Substitui a aba Gestão_Stonex.',completed:false,sprintId:null}
+  ]
 };
 
 let state, sortables=[], docVersion=0;
@@ -380,6 +425,8 @@ function noteTargetLabel(target){
   if(target.type==='section'){const s=getSection(target.id);return s?(s.title||'(seção sem título)'):(target.label||'(seção removida)');}
   if(target.type==='note'){const n=state.notes.find(x=>x.id===target.id);return n?`resposta a nota de ${n.author}`:(target.label||'(nota removida)');}
   if(target.type==='sprint'){const sp=state.sprints.find(x=>x.id===target.id);return sp?sprintLabel(sp):(target.label||'(sprint removido)');}
+  if(target.type==='milestone'){const m=state.milestones.find(x=>x.id===target.id);return m?(m.title||'(marco sem título)'):(target.label||'(marco removido)');}
+  if(target.type==='doc')return 'Mapa da Planilha';
   return target.label||'(destino)';
 }
 
@@ -597,7 +644,7 @@ function addNoteToDoc(){
   const v=(inp.value||'').trim();if(!v)return;
   state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,target:{type:'doc',id:'sheet-mapping-doc',label:'Mapa da Planilha'}});
   inp.value='';
-  renderSheetDoc();save();
+  renderAll();save();
 }
 /* ---------- sprints render ---------- */
 let expandedSprints=new Set();
@@ -654,6 +701,46 @@ function addNoteToSprint(spId,inp,root){
   if(again)again.focus();
 }
 
+/* ---------- milestones render ---------- */
+function milestoneNotes(m){return state.notes.filter(n=>n.target&&n.target.type==='milestone'&&n.target.id===m.id);}
+function milestoneSprintPickHTML(m){
+  let o='<option value="">— sem sprint —</option>';
+  state.sprints.forEach(sp=>{o+=`<option value="${sp.id}" ${sp.id===m.sprintId?'selected':''}>${esc(sprintLabel(sp))}</option>`;});
+  return `<select class="sprintPick" data-role="milestoneSprintPick">${o}</select>`;
+}
+function milestoneHTML(m){
+  const notes=milestoneNotes(m);
+  return `<div class="milestoneCard ${m.completed?'completed':''}" data-mid="${m.id}">
+    <div class="milestoneHead">
+      <input type="checkbox" class="done" data-role="milestoneCompleted" ${m.completed?'checked':''} title="Concluído">
+      <input class="milestoneTitle" data-role="milestoneTitle" value="${esc(m.title)}" placeholder="título do marco">
+      <button class="itemDel" data-role="delMilestone" title="Remover marco">✕</button>
+    </div>
+    <textarea class="secIntro" data-role="milestoneDescription" rows="1" placeholder="descrição…">${esc(m.description)}</textarea>
+    <div class="itemSprintRow">${milestoneSprintPickHTML(m)}</div>
+    <div class="docNotes">
+      <div class="noteList">${noteListHTML(notes)}</div>
+      <div class="noteAddRow">
+        <input class="noteInput" data-role="milestoneNoteInput" data-milestone-id="${m.id}" placeholder="adicionar nota sobre este marco…">
+        <button class="noteAddBtn" data-role="addMilestoneNote" data-milestone-id="${m.id}">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderMarcos(){
+  el('marcosList').innerHTML=state.milestones.map(milestoneHTML).join('')||'<div class="hint">Nenhum marco cadastrado.</div>';
+  document.querySelectorAll('#marcosList .secIntro').forEach(autosize);
+}
+function addNoteToMilestone(mid,inp,root){
+  const v=(inp.value||'').trim();if(!v)return;
+  const m=state.milestones.find(x=>x.id===mid);
+  state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,target:{type:'milestone',id:mid,label:(m&&m.title)||''}});
+  renderAll();save();
+  const scope=root||document;
+  const again=scope.querySelector(`.milestoneCard[data-mid="${mid}"] [data-role="milestoneNoteInput"]`);
+  if(again)again.focus();
+}
+
 /* ---------- pending items render ---------- */
 function mostRecentTs(it){return extractIdTs(it.id);}
 const URGENCY_RANK={alta:3,media:2,baixa:1};
@@ -703,6 +790,64 @@ function renderPending(){
   el('pendingList').innerHTML=list.length?list.map(pendingHTML).join(''):'<div class="hint">Nenhum item pendente.</div>';
   document.querySelectorAll('#pendingList .secIntro').forEach(autosize);
   el('filterPending').textContent=showAll?'Mostrar apenas abertas':'Mostrar tudo';
+}
+
+/* ---------- notas (all notes, flat) render ---------- */
+function allNotesSorted(){return [...state.notes].sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));}
+function noteRowHTML(n){
+  const mine=n.author===author;
+  const editRemove=mine?`<button data-role="editNote" data-id="${n.id}">editar</button><button class="noteDelBtn" data-role="delNote" data-id="${n.id}">remover</button>`:'';
+  return `<div class="noteEntry noteRow" data-note-id="${n.id}">
+    <span class="noteMeta">${esc(n.author)} · ${formatNoteTs(n.ts)} · <span class="noteAddress">${esc(noteTargetLabel(n.target))}</span></span>
+    <span class="noteText" data-role="noteTextDisplay" data-id="${n.id}">${esc(n.text)}</span>
+    <div class="noteActions">${editRemove}</div>
+  </div>`;
+}
+function notesTargetOptions(){
+  let o='<option value="">— escolha o destino —</option>';
+  state.sections.forEach(s=>{
+    o+=`<optgroup label="${esc(s.title||'(seção sem título)')}">`;
+    o+=`<option value="section:${s.id}">▸ ${esc(s.title||'(seção sem título)')} (seção inteira)</option>`;
+    s.items.forEach(it=>{o+=`<option value="item:${it.id}">• ${esc((it.text||'item').slice(0,48))}</option>`;});
+    o+='</optgroup>';
+  });
+  if(state.sprints.length){
+    o+='<optgroup label="Sprints">';
+    state.sprints.forEach(sp=>{o+=`<option value="sprint:${sp.id}">${esc(sprintLabel(sp))}</option>`;});
+    o+='</optgroup>';
+  }
+  if(state.milestones.length){
+    o+='<optgroup label="Marcos">';
+    state.milestones.forEach(m=>{o+=`<option value="milestone:${m.id}">${esc(m.title||'(marco sem título)')}</option>`;});
+    o+='</optgroup>';
+  }
+  o+='<optgroup label="Documento"><option value="doc:sheet-mapping-doc">Mapa da Planilha</option></optgroup>';
+  return o;
+}
+function renderNotas(){
+  const list=allNotesSorted();
+  el('notasList').innerHTML=list.length?list.map(noteRowHTML).join(''):'<div class="hint">Nenhuma nota ainda.</div>';
+  const pick=el('notesTargetPick');
+  const prev=pick.value;
+  pick.innerHTML=notesTargetOptions();
+  if([...pick.options].some(o=>o.value===prev))pick.value=prev;
+}
+function addNoteFromNotasTab(){
+  const sel=el('notesTargetPick').value;
+  const inp=el('notesAddInput');
+  const text=(inp.value||'').trim();
+  if(!sel||!text)return;
+  const idx=sel.indexOf(':');
+  const type=sel.slice(0,idx),id=sel.slice(idx+1);
+  let label='';
+  if(type==='item'){const it=getItem(id);label=it?(it.text||'').slice(0,60):'';}
+  else if(type==='section'){const s=getSection(id);label=s?(s.title||''):'';}
+  else if(type==='sprint'){const sp=state.sprints.find(x=>x.id===id);label=sprintLabel(sp);}
+  else if(type==='milestone'){const m=state.milestones.find(x=>x.id===id);label=m?(m.title||''):'';}
+  else if(type==='doc'){label='Mapa da Planilha';}
+  state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text,target:{type,id,label}});
+  inp.value='';
+  renderAll();save();
 }
 
 /* ---------- retrospectives (read-only, GitHub API) ---------- */
@@ -756,7 +901,7 @@ function renderRetro(){
   el('retroList').innerHTML=retroCache.map((f,i)=>retroEntryHTML(f,i)).join('')||'<div class="hint">Nenhuma retrospectiva encontrada.</div>';
 }
 
-function renderAll(){renderBacklog();renderSheetDoc();renderSprints();renderPending();}
+function renderAll(){renderBacklog();renderSheetDoc();renderSprints();renderMarcos();renderPending();renderNotas();}
 
 function autosize(e){if(!e)return;e.style.height='auto';e.style.height=e.scrollHeight+'px';}
 function autosizeAll(){document.querySelectorAll('.secIntro,.itemText,#footNote').forEach(autosize);}
@@ -957,7 +1102,11 @@ SP.addEventListener('change',e=>{
   const sp=state.sprints.find(s=>s.id===card.dataset.spid);if(!sp)return;
   if(r==='sprintStart'){sp.start=e.target.value;renderSprints();save();}
   else if(r==='sprintEnd'){sp.end=e.target.value;save();}
-  else if(r==='sprintStatus'){sp.status=e.target.value;renderSprints();save();}
+  else if(r==='sprintStatus'){
+    sp.status=e.target.value;
+    if(sp.status==='done'){state.milestones.forEach(m=>{if(m.sprintId===sp.id)m.completed=true;});}
+    renderAll();save();
+  }
 });
 SP.addEventListener('click',e=>{
   if(handleNoteClick(e))return;
@@ -983,6 +1132,48 @@ SP.addEventListener('keydown',e=>{
     e.preventDefault();
     const card=e.target.closest('.sprintCard');if(!card)return;
     addNoteToSprint(card.dataset.spid,e.target,e.currentTarget);
+  }
+});
+
+/* ---------- milestones events ---------- */
+const MC=el('marcosList');
+MC.addEventListener('input',e=>{
+  const r=e.target.dataset.role;
+  const card=e.target.closest('.milestoneCard');if(!card)return;
+  const m=state.milestones.find(x=>x.id===card.dataset.mid);if(!m)return;
+  if(r==='milestoneTitle'){m.title=e.target.value;save();}
+  else if(r==='milestoneDescription'){m.description=e.target.value;autosize(e.target);save();}
+});
+MC.addEventListener('change',e=>{
+  const r=e.target.dataset.role;
+  const card=e.target.closest('.milestoneCard');if(!card)return;
+  const m=state.milestones.find(x=>x.id===card.dataset.mid);if(!m)return;
+  if(r==='milestoneCompleted'){m.completed=e.target.checked;renderMarcos();save();}
+  else if(r==='milestoneSprintPick'){m.sprintId=e.target.value||null;save();}
+});
+MC.addEventListener('click',e=>{
+  if(handleNoteClick(e))return;
+  const r=e.target.dataset.role;if(!r)return;
+  const card=e.target.closest('.milestoneCard');if(!card)return;
+  const m=state.milestones.find(x=>x.id===card.dataset.mid);if(!m)return;
+  if(r==='delMilestone'){
+    if(confirm(`Remover o marco "${m.title||'sem título'}"?`)){
+      const mid=m.id;
+      state.milestones=state.milestones.filter(x=>x.id!==mid);
+      state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='milestone'&&n.target.id===mid));
+      renderAll();save();
+    }
+  }else if(r==='addMilestoneNote'){
+    const inp=card.querySelector('[data-role="milestoneNoteInput"]');
+    if(inp)addNoteToMilestone(m.id,inp,e.currentTarget);
+  }
+});
+MC.addEventListener('keydown',handleNoteKeydown);
+MC.addEventListener('keydown',e=>{
+  if(e.target.dataset.role==='milestoneNoteInput'&&e.key==='Enter'){
+    e.preventDefault();
+    const card=e.target.closest('.milestoneCard');if(!card)return;
+    addNoteToMilestone(card.dataset.mid,e.target,e.currentTarget);
   }
 });
 
@@ -1019,6 +1210,12 @@ PD.addEventListener('click',e=>{
     setTimeout(()=>{const node=document.querySelector(`[data-iid="${iid}"]`);if(node){node.scrollIntoView({behavior:'smooth',block:'center'});node.classList.add('showNote');}},0);
   }
 });
+
+/* ---------- notas events ---------- */
+const NT=el('notasList');
+NT.addEventListener('click',e=>{handleNoteClick(e);});
+el('notesAddBtn').addEventListener('click',addNoteFromNotasTab);
+el('notesAddInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addNoteFromNotasTab();}});
 
 /* ---------- retrospectives events ---------- */
 const RT=el('retroList');
@@ -1079,6 +1276,12 @@ el('addSprint').addEventListener('click',()=>{
   state.sprints.push(sp);expandedSprints.add(sp.id);renderSprints();save();
   const n=document.querySelector(`[data-spid="${sp.id}"] .sprintName`);
   if(n){n.focus();n.scrollIntoView({behavior:'smooth',block:'center'});}
+});
+el('addMarco').addEventListener('click',()=>{
+  const m={id:uid(),title:'',description:'',completed:false,sprintId:null};
+  state.milestones.push(m);renderMarcos();save();
+  const t=document.querySelector(`.milestoneCard[data-mid="${m.id}"] .milestoneTitle`);
+  if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
 });
 el('addPendingItem').addEventListener('click',()=>{
   const p={id:uid(),origin:'standalone',title:'Novo item pendente',description:'',author:ensureAuthor(),createdAt:new Date().toISOString(),status:'open',urgency:'media'};
@@ -1161,6 +1364,8 @@ function normalize(o){
   });
   if(!Array.isArray(o.pendingItems))o.pendingItems=[];
   o.pendingItems.forEach(p=>{p.id=p.id||uid();p.origin='standalone';p.status=p.status||'open';p.createdAt=p.createdAt||new Date(0).toISOString();p.urgency=p.urgency||'media';});
+  if(!Array.isArray(o.milestones))o.milestones=JSON.parse(JSON.stringify(DEFAULT_STATE.milestones));
+  o.milestones.forEach(m=>{m.id=m.id||uid();m.title=m.title||'';m.description=m.description||'';m.completed=!!m.completed;if(m.sprintId===undefined)m.sprintId=null;});
 }
 function boot(){
   el('docTitle').value=state.docTitle||'';el('docSub').value=state.docSub||'';
