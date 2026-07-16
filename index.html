@@ -13,13 +13,14 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  input,textarea,select,button{font-family:inherit}
   .wrap{max-width:920px;margin:0 auto;padding:20px 18px 90px}
   .titleInput{font-size:23px;font-weight:700;border:none;background:transparent;width:100%;color:var(--ink);padding:2px 4px;border-radius:6px;letter-spacing:-.01em}
   .subInput{color:var(--muted);font-weight:600;border:none;background:transparent;width:100%;padding:2px 4px;border-radius:6px;margin-bottom:10px}
   .titleInput:hover,.subInput:hover{background:#f2efe9}
   .titleInput:focus,.subInput:focus{outline:2px solid var(--accent);background:#fff}
 
-  .tabs{display:flex;gap:4px;margin:8px 0 0}
+  .tabs{display:flex;gap:4px;margin:8px 0 0;position:sticky;top:0;z-index:21;background:var(--bg)}
   .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:#f1ede7;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px}
   .tab.active{background:var(--panel);color:var(--ink)}
   .diagram{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-weight:600;color:#3d3a35;line-height:1.7;margin-bottom:12px;font-size:14px}
@@ -30,13 +31,14 @@
   .chip.N{color:var(--N);background:var(--Nbg)}.chip.P{color:var(--P);background:var(--Pbg)}
   .chip.B{color:var(--bang);background:var(--bangbg)}.chip.D{color:var(--E);background:var(--Ebg)}
 
-  .toolbar{position:sticky;top:0;z-index:20;background:var(--bg);padding:9px 0;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+  .toolbar{position:sticky;top:38px;z-index:20;background:var(--bg);padding:9px 0;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
   button.tb{border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13.5px}
   button.tb:hover{border-color:var(--accent);color:var(--accent-ink)}
   button.tb.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
   button.tb.primary:hover{background:var(--accent-ink)}
   button.tb.bangfilter{border-color:#eec3bc;color:var(--bang)}
   button.tb.bangfilter.active{background:var(--bang);color:#fff;border-color:var(--bang)}
+  .filterSelect{border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600;padding:6px 10px;border-radius:8px;font-size:13.5px;cursor:pointer}
   .saveState{margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:600}
 
   .section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 12px 8px;margin:14px 0}
@@ -53,6 +55,9 @@
   .secDone{font-size:11.5px;font-weight:700;color:var(--E);background:var(--Ebg);border-radius:999px;padding:2px 8px;flex:none}
   .secDel{border:none;background:transparent;color:#c9c2b8;cursor:pointer;font-size:16px;padding:4px 6px;border-radius:6px;flex:none}
   .secDel:hover{color:var(--bang);background:var(--bangbg)}
+  .secToggle{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 4px;flex:none;padding-top:6px}
+  .secToggle:hover{color:var(--accent-ink)}
+  .section.collapsed .secSub,.section.collapsed .secIntro,.section.collapsed .items,.section.collapsed .addItem{display:none}
 
   .items{margin-top:6px;display:flex;flex-direction:column;gap:4px;min-height:8px}
   .item{display:flex;align-items:flex-start;gap:8px;padding:6px;border-radius:9px;border:1px solid transparent}
@@ -60,6 +65,12 @@
   .item.isDone{border-left:3px solid var(--E);background:#f3f9f5}
   .item.isDone .itemText{color:#6a7f74}
   .item .handle{font-size:15px;padding-top:6px}
+  .itemToggle{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 4px;flex:none;padding-top:6px}
+  .itemToggle:hover{color:var(--accent-ink)}
+  .itemProgressLabel{display:none;flex:none;font-size:12px;font-weight:700;color:var(--muted);padding-top:6px}
+  .item.collapsed .itemProgress,.item.collapsed .subtasksBlock,.item.collapsed .itemSprintRow,.item.collapsed .noteToggle,.item.collapsed .typePicker,.item.collapsed .itemDel{display:none}
+  .item.collapsed .itemProgressLabel{display:block}
+  .item.collapsed .itemText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:1.7em!important;resize:none}
   input.done{width:17px;height:17px;flex:none;margin-top:5px;cursor:pointer;accent-color:var(--E)}
   select.status{appearance:none;-webkit-appearance:none;border:1px solid var(--line);border-radius:7px;font-weight:700;font-size:12px;padding:5px 8px;cursor:pointer;flex:none;text-align:center;background:var(--nonebg);color:var(--none)}
   select.status.E{background:var(--Ebg);color:var(--E)}select.status.A{background:var(--Abg);color:var(--A)}
@@ -73,6 +84,7 @@
   .noteToggle:hover{color:var(--accent-ink);background:#eef4f1}.noteToggle .dot{color:var(--accent)}
   .note{width:100%;border:1px dashed var(--line);background:#fcfbf9;resize:none;padding:6px 8px;border-radius:7px;font-size:13px;line-height:1.5;overflow:hidden;color:#5a554d;margin-top:3px;display:none}
   .item.showNote .note{display:block}
+  .item.collapsed .note{display:none}
   .itemDel{border:none;background:transparent;color:#cfc8be;cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;flex:none}
   .itemDel:hover{color:var(--bang);background:var(--bangbg)}
   .addItem{margin:6px 0 2px;background:none;border:1px dashed var(--line);color:var(--muted);cursor:pointer;padding:6px 10px;border-radius:8px;font-size:13px;font-weight:600}
@@ -98,6 +110,7 @@
   body:not([data-view="sprints"]) #addSprint{display:none}
   body:not([data-view="pending"]) #addPendingItem{display:none}
   body:not([data-view="pending"]) #filterPending{display:none}
+  body:not([data-view="pending"]) #filterUrgency{display:none}
 
   select:disabled,button:disabled,input:disabled{opacity:.4;cursor:not-allowed}
 
@@ -131,17 +144,21 @@
   select.urgency.urgency-baixa{background:var(--Ebg);color:var(--E)}
   select.urgency.urgency-media{background:var(--Abg);color:var(--A)}
   select.urgency.urgency-alta{background:var(--bangbg);color:var(--bang)}
-  .urgencyBadge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-weight:700;font-size:11px;flex:none}
-  .urgencyBadge.baixa{color:var(--E);background:var(--Ebg)}
-  .urgencyBadge.media{color:var(--A);background:var(--Abg)}
-  .urgencyBadge.alta{color:var(--bang);background:var(--bangbg)}
 
   /* notes list */
   .noteList{display:flex;flex-direction:column;gap:4px;margin-top:2px}
   .noteEntry{font-size:13px;border-left:2px solid var(--line);padding-left:8px}
   .noteMeta{color:var(--muted);font-weight:600;font-size:11.5px;display:block}
   .noteText{color:#4a463f}
+  .noteActions{display:flex;gap:8px;margin-top:2px}
+  .noteActions button{border:none;background:none;color:var(--muted);cursor:pointer;font-size:11px;font-weight:600;padding:0}
+  .noteActions button:hover{color:var(--accent-ink)}
+  .noteDelBtn:hover{color:var(--bang)!important}
+  .noteReplies{margin-top:4px;display:flex;flex-direction:column;gap:4px}
+  .noteReply{margin-left:16px;border-left-color:#d8d2c8}
+  .noteEditInput{width:100%;border:1px dashed var(--line);border-radius:6px;padding:3px 6px;font-size:13px;background:#fff;color:var(--ink)}
   .noteAddRow{display:flex;gap:6px;margin-top:5px}
+  .noteReplyRow{margin-left:16px}
   .noteInput{flex:1;border:1px dashed var(--line);border-radius:7px;padding:5px 8px;font-size:13px;background:#fcfbf9;color:var(--ink)}
   .noteInput:focus{outline:2px solid var(--accent);background:#fff}
   .noteAddBtn{border:1px dashed var(--line);background:none;border-radius:7px;color:var(--muted);cursor:pointer;padding:4px 10px;font-weight:700}
@@ -205,6 +222,12 @@
     <button class="tb primary" id="addPendingItem">+ Novo item pendente</button>
     <button class="tb bangfilter" id="filterBang">❗ Só pendências externas (0)</button>
     <button class="tb" id="filterPending">Mostrar apenas abertas</button>
+    <select class="filterSelect" id="filterUrgency">
+      <option value="">Todas</option>
+      <option value="baixa">Baixa</option>
+      <option value="media">Média</option>
+      <option value="alta">Alta</option>
+    </select>
     <button class="tb" id="expMd">Exportar Markdown</button>
     <button class="tb" id="expJson">Exportar JSON</button>
     <button class="tb" id="impBtn">Importar JSON</button>
@@ -349,6 +372,7 @@ function noteTargetLabel(target){
   if(!target)return '(destino)';
   if(target.type==='item'){const it=getItem(target.id);return it?(it.text||'(item sem texto)').slice(0,60):(target.label||'(item removido)');}
   if(target.type==='section'){const s=getSection(target.id);return s?(s.title||'(seção sem título)'):(target.label||'(seção removida)');}
+  if(target.type==='note'){const n=state.notes.find(x=>x.id===target.id);return n?`resposta a nota de ${n.author}`:(target.label||'(nota removida)');}
   return target.label||'(destino)';
 }
 
@@ -383,11 +407,49 @@ async function doSave(){
 }
 
 /* ---------- backlog render ---------- */
+let collapsedSections=new Set();
+let collapsedItems=new Set();
 function statusOptions(sel){return [['','—'],['E','E'],['A','A'],['N','N'],['P','P']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
 function urgencyOptions(sel){return [['baixa','Baixa'],['media','Média'],['alta','Alta']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
 function formatNoteTs(ts){try{return new Date(ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});}catch(e){return '';}}
+let replyingToNoteId=null;
+function noteDescendants(noteId){
+  const direct=state.notes.filter(n=>n.target&&n.target.type==='note'&&n.target.id===noteId);
+  let all=[...direct];
+  direct.forEach(d=>{all=all.concat(noteDescendants(d.id));});
+  return all;
+}
+function noteActionsHTML(n){
+  const mine=n.author===author;
+  const editRemove=mine?`<button data-role="editNote" data-id="${n.id}">editar</button><button class="noteDelBtn" data-role="delNote" data-id="${n.id}">remover</button>`:'';
+  return `<div class="noteActions"><button data-role="replyNote" data-id="${n.id}">responder</button>${editRemove}</div>`;
+}
+function replyRowHTML(parentId){
+  return `<div class="noteAddRow noteReplyRow">
+    <input class="noteInput" data-role="noteReplyInput" data-parent-id="${parentId}" placeholder="responder…">
+    <button class="noteAddBtn" data-role="submitReply" data-parent-id="${parentId}">+</button>
+  </div>`;
+}
+function noteReplyHTML(n){
+  return `<div class="noteEntry noteReply" data-note-id="${n.id}">
+    <span class="noteMeta">${esc(n.author)} · ${formatNoteTs(n.ts)}</span>
+    <span class="noteText" data-role="noteTextDisplay" data-id="${n.id}">${esc(n.text)}</span>
+    ${noteActionsHTML(n)}
+    ${replyingToNoteId===n.id?replyRowHTML(n.id):''}
+  </div>`;
+}
+function noteEntryHTML(n){
+  const descendants=noteDescendants(n.id).sort((a,b)=>(a.ts||'').localeCompare(b.ts||''));
+  return `<div class="noteEntry" data-note-id="${n.id}">
+    <span class="noteMeta">${esc(n.author)} · ${formatNoteTs(n.ts)}</span>
+    <span class="noteText" data-role="noteTextDisplay" data-id="${n.id}">${esc(n.text)}</span>
+    ${noteActionsHTML(n)}
+    ${replyingToNoteId===n.id?replyRowHTML(n.id):''}
+    ${descendants.length?`<div class="noteReplies">${descendants.map(noteReplyHTML).join('')}</div>`:''}
+  </div>`;
+}
 function noteListHTML(notes){
-  return (notes||[]).map(n=>`<div class="noteEntry"><span class="noteMeta">${esc(n.author)} · ${formatNoteTs(n.ts)}</span><span class="noteText">${esc(n.text)}</span></div>`).join('');
+  return (notes||[]).map(noteEntryHTML).join('');
 }
 function sprintLabel(sp){
   if(!sp)return '(sprint removido)';
@@ -432,17 +494,24 @@ function subtasksHTML(it){
     <button class="addSubtask" data-role="addSubtask">+ subtarefa</button>
   </div>`;
 }
+function compactProgressLabel(it){
+  if(it.progressType==='percent')return `${itemProgress(it)}%`;
+  if(it.progressType==='subtasks'){const total=it.subtasks.length,done=it.subtasks.filter(s=>s.done).length;return `${done}/${total}`;}
+  return '';
+}
 function itemHTML(it,opts){
   opts=opts||{};
   const locked=!it.progressType;
   const notes=itemNotes(it);
   const hasNotes=notes.length>0;
   const complete=itemProgress(it)===100;
-  return `<div class="item ${hasNotes?'showNote':''} ${it.confirm?'hasBang':''} ${complete?'isDone':''}" data-iid="${it.id}">
+  const collapsed=collapsedItems.has(it.id);
+  return `<div class="item ${hasNotes?'showNote':''} ${it.confirm?'hasBang':''} ${complete?'isDone':''} ${collapsed?'collapsed':''}" data-iid="${it.id}">
+    <button class="itemToggle" data-role="itemToggle" title="${collapsed?'Expandir':'Recolher'}">${collapsed?'▸':'▾'}</button>
     <div class="itemProgress">${progressControlHTML(it,locked)}</div>
+    <span class="itemProgressLabel">${compactProgressLabel(it)}</span>
     <select class="status ${it.status||''}" data-role="status" ${locked?'disabled':''}>${statusOptions(it.status||'')}</select>
     <button class="bang ${it.confirm?'on':''}" data-role="confirm" title="Pendência externa" ${locked?'disabled':''}>!</button>
-    <select class="urgency urgency-${it.urgency||'media'}" data-role="urgency" title="Urgência" ${locked?'disabled':''}>${urgencyOptions(it.urgency||'media')}</select>
     <div class="itemMain">
       <textarea class="itemText" data-role="text" rows="1">${esc(it.text)}</textarea>
       ${locked?typePickerHTML():''}
@@ -462,9 +531,11 @@ function itemHTML(it,opts){
 }
 function sectionHTML(s){
   const allDone=s.items.length>0&&s.items.every(i=>itemProgress(i)===100);
-  return `<div class="section" data-sid="${s.id}">
+  const collapsed=collapsedSections.has(s.id);
+  return `<div class="section ${collapsed?'collapsed':''}" data-sid="${s.id}">
     <div class="secHead">
       <span class="handle sec-handle">⋮⋮</span>
+      <button class="secToggle" data-role="secToggle" title="${collapsed?'Expandir':'Recolher'}">${collapsed?'▸':'▾'}</button>
       <div class="grow">
         <div class="secTitleRow">
           <input class="secTitle" data-role="secTitle" value="${esc(s.title)}" placeholder="Título">
@@ -559,9 +630,9 @@ function renderSprints(){
 
 /* ---------- pending items render ---------- */
 function mostRecentTs(it){return extractIdTs(it.id);}
-function urgencyBadgeHTML(u){
-  const label=u==='alta'?'Alta':u==='baixa'?'Baixa':'Média';
-  return `<span class="urgencyBadge ${u}">${label}</span>`;
+const URGENCY_RANK={alta:3,media:2,baixa:1};
+function pendingUrgencySelectHTML(p){
+  return `<select class="urgency urgency-${p.urgency}" data-role="pendingUrgency" data-kind="${p.kind}" data-id="${p.id}" title="Urgência">${urgencyOptions(p.urgency)}</select>`;
 }
 function buildPendingList(){
   const derived=[];
@@ -573,7 +644,11 @@ function buildPendingList(){
   }));
   const standalone=state.pendingItems.map(p=>({kind:'standalone',id:p.id,title:p.title,description:p.description,
     author:p.author,resolved:p.status==='resolved',urgency:p.urgency||'media',sortKey:new Date(p.createdAt).getTime()||0}));
-  return [...derived,...standalone].sort((a,b)=>b.sortKey-a.sortKey);
+  return [...derived,...standalone].sort((a,b)=>{
+    const ur=(URGENCY_RANK[b.urgency]||0)-(URGENCY_RANK[a.urgency]||0);
+    if(ur!==0)return ur;
+    return b.sortKey-a.sortKey;
+  });
 }
 function pendingHTML(p){
   const originHTML=p.kind==='backlog'
@@ -585,7 +660,7 @@ function pendingHTML(p){
       <textarea class="secIntro" data-role="pendingDescription" data-id="${p.id}" rows="1" placeholder="descrição…">${esc(p.description||'')}</textarea>
       <div class="pendingAuthor">por ${esc(p.author||'')}</div>`;
   return `<div class="pendingCard ${p.resolved?'resolved':''}" data-kind="${p.kind}" data-id="${p.id}">
-    <div class="pendingHead">${originHTML}${urgencyBadgeHTML(p.urgency)}</div>
+    <div class="pendingHead">${originHTML}${pendingUrgencySelectHTML(p)}</div>
     ${body}
     <div class="pendingActions">
       <button class="tb" data-role="togglePendingResolved" data-kind="${p.kind}" data-id="${p.id}">${p.resolved?'Reabrir':'Resolver'}</button>
@@ -595,8 +670,10 @@ function pendingHTML(p){
 }
 function renderPending(){
   const showAll=document.body.classList.contains('pendingShowAll');
+  const urgencyFilter=el('filterUrgency').value;
   let list=buildPendingList();
   if(!showAll)list=list.filter(p=>!p.resolved);
+  if(urgencyFilter)list=list.filter(p=>p.urgency===urgencyFilter);
   el('pendingList').innerHTML=list.length?list.map(pendingHTML).join(''):'<div class="hint">Nenhum item pendente.</div>';
   document.querySelectorAll('#pendingList .secIntro').forEach(autosize);
   el('filterPending').textContent=showAll?'Mostrar apenas abertas':'Mostrar tudo';
@@ -697,7 +774,6 @@ function handleItemChange(e){
   const it=getItem(itemEl.dataset.iid);if(!it)return false;
   if(r==='status'){it.status=e.target.value;e.target.className='status '+(it.status||'');save();return true;}
   if(r==='done'){it.done=e.target.checked;renderAll();save();return true;}
-  if(r==='urgency'){it.urgency=e.target.value;e.target.className='urgency urgency-'+it.urgency;save();return true;}
   if(r==='sprintPick'){it.sprintId=e.target.value||null;renderAll();save();return true;}
   if(r==='subtasksAllDone'){const v=e.target.checked;it.subtasks.forEach(st=>st.done=v);renderAll();save();return true;}
   if(r==='percent'){let v=parseInt(e.target.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(100,v));it.percent=v;renderAll();save();return true;}
@@ -721,6 +797,7 @@ function handleItemClick(e){
   const itemEl=e.target.closest('.item');if(!itemEl)return false;
   const it=getItem(itemEl.dataset.iid);if(!it)return false;
   if(r==='confirm'){it.confirm=!it.confirm;it.pendingResolved=it.confirm?false:true;renderAll();save();return true;}
+  if(r==='itemToggle'){if(collapsedItems.has(it.id))collapsedItems.delete(it.id);else collapsedItems.add(it.id);renderAll();return true;}
   if(r==='noteToggle'){itemEl.classList.toggle('showNote');if(itemEl.classList.contains('showNote')){const inp=itemEl.querySelector('.noteInput');if(inp)inp.focus();}return true;}
   if(r==='addNote'){addNoteFromItem(itemEl);return true;}
   if(r==='setProgressType'){it.progressType=e.target.dataset.type;renderAll();save();return true;}
@@ -746,6 +823,64 @@ function handleItemKeydown(e){
   if(e.target.dataset.role==='noteInput'&&e.key==='Enter'){e.preventDefault();addNoteFromItem(e.target.closest('.item'));}
 }
 
+/* ---------- shared note handlers (used anywhere notes render: items, sprints, sheet doc) ---------- */
+function startEditNote(id){
+  const span=document.querySelector(`[data-role="noteTextDisplay"][data-id="${id}"]`);
+  if(!span)return;
+  const n=state.notes.find(x=>x.id===id);if(!n)return;
+  const input=document.createElement('input');
+  input.className='noteEditInput';
+  input.value=n.text;
+  input.dataset.role='noteEditInput';
+  input.dataset.id=id;
+  span.replaceWith(input);
+  input.focus();input.select();
+  const commit=()=>{const v=(input.value||'').trim();if(v)n.text=v;renderAll();save();};
+  input.addEventListener('blur',commit,{once:true});
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}});
+}
+function handleNoteClick(e){
+  const r=e.target.dataset.role;
+  if(r==='editNote'){startEditNote(e.target.dataset.id);return true;}
+  if(r==='delNote'){
+    const id=e.target.dataset.id;
+    if(confirm('Remover esta nota?')){
+      const ids=[id,...noteDescendants(id).map(n=>n.id)];
+      state.notes=state.notes.filter(n=>!ids.includes(n.id));
+      renderAll();save();
+    }
+    return true;
+  }
+  if(r==='replyNote'){
+    replyingToNoteId=e.target.dataset.id;
+    renderAll();
+    setTimeout(()=>{const inp=document.querySelector(`[data-role="noteReplyInput"][data-parent-id="${replyingToNoteId}"]`);if(inp)inp.focus();},0);
+    return true;
+  }
+  if(r==='submitReply'){
+    const parentId=e.target.dataset.parentId;
+    const inp=document.querySelector(`[data-role="noteReplyInput"][data-parent-id="${parentId}"]`);
+    const v=(inp&&inp.value||'').trim();
+    if(v){
+      const parent=state.notes.find(n=>n.id===parentId);
+      state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,
+        target:{type:'note',id:parentId,label:parent?`resposta a nota de ${parent.author}`:'(nota removida)'}});
+      save();
+    }
+    replyingToNoteId=null;
+    renderAll();
+    return true;
+  }
+  return false;
+}
+function handleNoteKeydown(e){
+  if(e.target.dataset.role==='noteReplyInput'&&e.key==='Enter'){
+    e.preventDefault();
+    const btn=document.querySelector(`[data-role="submitReply"][data-parent-id="${e.target.dataset.parentId}"]`);
+    if(btn)btn.click();
+  }
+}
+
 /* ---------- backlog events ---------- */
 const S=el('sections');
 S.addEventListener('input',e=>{
@@ -759,8 +894,10 @@ S.addEventListener('change',e=>{
 });
 S.addEventListener('click',e=>{
   const r=e.target.dataset.role;if(!r)return;
+  if(handleNoteClick(e))return;
   if(handleItemClick(e))return;
-  if(r==='delItem'){const s=getSection(e.target.closest('.section').dataset.sid);const iid=e.target.closest('.item').dataset.iid;
+  if(r==='secToggle'){const sid=e.target.closest('.section').dataset.sid;if(collapsedSections.has(sid))collapsedSections.delete(sid);else collapsedSections.add(sid);renderBacklog();}
+  else if(r==='delItem'){const s=getSection(e.target.closest('.section').dataset.sid);const iid=e.target.closest('.item').dataset.iid;
     s.items=s.items.filter(i=>i.id!==iid);state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='item'&&n.target.id===iid));renderAll();save();}
   else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'N',confirm:false,progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,pendingResolved:false,urgency:'media'};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
   else if(r==='delSection'){const sid=e.target.closest('.section').dataset.sid;const s=getSection(sid);
@@ -769,6 +906,7 @@ S.addEventListener('click',e=>{
       state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='item'&&ids.includes(n.target.id)));renderAll();save();}}
 });
 S.addEventListener('keydown',handleItemKeydown);
+S.addEventListener('keydown',handleNoteKeydown);
 
 /* ---------- sprints events ---------- */
 const SP=el('sprintsList');
@@ -790,6 +928,7 @@ SP.addEventListener('change',e=>{
   else if(r==='sprintStatus'){sp.status=e.target.value;renderSprints();save();}
 });
 SP.addEventListener('click',e=>{
+  if(handleNoteClick(e))return;
   if(handleItemClick(e))return;
   const r=e.target.dataset.role;if(!r)return;
   const card=e.target.closest('.sprintCard');if(!card)return;
@@ -801,6 +940,7 @@ SP.addEventListener('click',e=>{
     }}
 });
 SP.addEventListener('keydown',handleItemKeydown);
+SP.addEventListener('keydown',handleNoteKeydown);
 
 /* ---------- pending items events ---------- */
 const PD=el('pendingList');
@@ -809,6 +949,16 @@ PD.addEventListener('input',e=>{
   const p=state.pendingItems.find(x=>x.id===id);if(!p)return;
   if(r==='pendingTitle'){p.title=e.target.value;save();}
   else if(r==='pendingDescription'){p.description=e.target.value;autosize(e.target);save();}
+});
+PD.addEventListener('change',e=>{
+  const r=e.target.dataset.role;
+  if(r==='pendingUrgency'){
+    const kind=e.target.dataset.kind,id=e.target.dataset.id,v=e.target.value;
+    if(kind==='backlog'){const it=getItem(id);if(!it)return;it.urgency=v;}
+    else{const p=state.pendingItems.find(x=>x.id===id);if(!p)return;p.urgency=v;}
+    e.target.className='urgency urgency-'+v;
+    renderPending();save();
+  }
 });
 PD.addEventListener('click',e=>{
   const r=e.target.dataset.role;if(!r)return;
@@ -843,6 +993,9 @@ el('toggleDocMode').addEventListener('click',()=>{
 el('sheetDocEdit').addEventListener('input',e=>{state.sheetMappingDoc=e.target.value;autosize(e.target);save();});
 el('docAddNote').addEventListener('click',addNoteToDoc);
 el('docNoteInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addNoteToDoc();}});
+const DN=el('docNoteList');
+DN.addEventListener('click',e=>{handleNoteClick(e);});
+DN.addEventListener('keydown',handleNoteKeydown);
 
 /* ---------- tabs ---------- */
 function renderTabs(){
@@ -890,6 +1043,7 @@ el('addPendingItem').addEventListener('click',()=>{
   if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}
 });
 el('filterPending').addEventListener('click',()=>{document.body.classList.toggle('pendingShowAll');renderPending();});
+el('filterUrgency').addEventListener('change',()=>{renderPending();});
 el('reset').addEventListener('click',()=>{if(confirm('Resetar para o conteúdo original? Suas edições serão perdidas (exporte antes).')){state=JSON.parse(JSON.stringify(DEFAULT_STATE));boot();save();}});
 function download(name,text,type){const b=new Blob([text],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),400);}
 el('expJson').addEventListener('click',()=>download('documento_projeto.json',JSON.stringify(state,null,2),'application/json'));
