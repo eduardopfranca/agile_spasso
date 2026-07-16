@@ -22,9 +22,6 @@
   .tabs{display:flex;gap:4px;margin:8px 0 0}
   .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:#f1ede7;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px}
   .tab.active{background:var(--panel);color:var(--ink)}
-  .progress{background:var(--panel);border:1px solid var(--line);border-radius:0 9px 9px 9px;padding:9px 13px;font-size:13.5px;color:#4a463f;margin-bottom:12px}
-  .progress .aposN{color:var(--accent-ink)}
-
   .diagram{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-weight:600;color:#3d3a35;line-height:1.7;margin-bottom:12px;font-size:14px}
   .diagram .arrow{color:var(--accent);padding:0 4px;font-weight:700}
   .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;font-size:12.5px;color:var(--muted);align-items:center}
@@ -81,35 +78,13 @@
   .addItem{margin:6px 0 2px;background:none;border:1px dashed var(--line);color:var(--muted);cursor:pointer;padding:6px 10px;border-radius:8px;font-size:13px;font-weight:600}
   .addItem:hover{border-color:var(--accent);color:var(--accent-ink)}
 
-  .marco{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
-  .abaTag{font-size:11.5px;font-weight:700;color:var(--muted);background:#f0ede8;border:1px solid var(--line);border-radius:999px;padding:2px 8px}
-  .abaTag.ok{color:var(--E);background:var(--Ebg);border-color:#bfe3d1}
-
   .footer{margin-top:20px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .footer b{color:var(--ink)}
   .footNote{width:100%;border:none;background:transparent;resize:none;padding:4px;border-radius:6px;font-size:13.5px;color:#4a463f;overflow:hidden}
   .footNote:hover{background:#f6f3ee}.footNote:focus{outline:2px solid var(--accent);background:#fff}
   .hint{color:var(--muted);font-size:12.5px;margin:2px 0 10px}
 
-  .aba{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:10px;margin:10px 0}
-  .abaHead{display:flex;align-items:center;gap:8px}
-  .abaName{flex:1;font-weight:700;font-size:15px;border:none;background:transparent;padding:3px 4px;border-radius:6px;color:var(--ink)}
-  .abaName:hover{background:#f4f1ec}.abaName:focus{outline:2px solid var(--accent);background:#fff}
-  .tipo{font-size:11px;font-weight:700;color:var(--muted);background:#f0ede8;border-radius:6px;padding:3px 7px;flex:none}
-  .abaPapel{width:100%;border:none;background:transparent;resize:none;padding:4px;border-radius:6px;font-size:13.5px;color:#4a463f;overflow:hidden}
-  .abaPapel:hover{background:#f6f3ee}.abaPapel:focus{outline:2px solid var(--accent);background:#fff}
-  .cobertura{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
-  .cobLabel{font-size:12.5px;color:var(--muted);font-weight:600}
-  .covChip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;background:#eef1f5;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 9px;color:#3d3a35}
-  .covChip.done{background:var(--Ebg);border-color:#bfe3d1;color:var(--E)}
-  .covChip button{border:none;background:none;cursor:pointer;color:#b3aca2;font-size:12px;padding:0 2px}
-  .covChip button:hover{color:var(--bang)}
   .noneTxt{color:var(--muted);font-size:12.5px}
-  .coverPick{font-size:12px;border:1px dashed var(--line);border-radius:7px;padding:4px 6px;color:var(--muted);background:var(--panel);cursor:pointer;max-width:190px}
-  .abaState{margin-top:8px;font-size:12.5px;font-weight:700;padding:4px 9px;border-radius:7px;display:inline-block}
-  .abaState.ok{color:var(--E);background:var(--Ebg)}
-  .abaState.wait{color:var(--A);background:var(--Abg)}
-  .abaState.nolink{color:var(--muted);background:#f0ede8}
 
   .sortable-ghost{opacity:.35}
   input[type=file]{display:none}
@@ -120,10 +95,36 @@
   body:not([data-view="retro"]) #view-retro{display:none}
   body:not([data-view="backlog"]) #addSection{display:none}
   body:not([data-view="backlog"]) #filterBang{display:none}
-  body:not([data-view="mapa"]) #addAba{display:none}
   body:not([data-view="sprints"]) #addSprint{display:none}
   body:not([data-view="pending"]) #addPendingItem{display:none}
   body:not([data-view="pending"]) #filterPending{display:none}
+
+  select:disabled,button:disabled,input:disabled{opacity:.4;cursor:not-allowed}
+
+  /* item progress control + type picker */
+  .itemProgress{flex:none;display:flex;align-items:center;padding-top:4px}
+  .percentInput{width:52px;border:1px solid var(--line);border-radius:7px;padding:5px 4px;font-size:12px;text-align:center;flex:none;color:var(--ink);background:var(--panel)}
+  .typePicker{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+
+  /* subtasks */
+  .subtasksBlock{margin-top:4px;display:flex;flex-direction:column;gap:3px}
+  .subtaskRow{display:flex;align-items:center;gap:6px}
+  .subtaskDone{width:14px;height:14px;cursor:pointer;accent-color:var(--E)}
+  .subtaskText{flex:1;border:none;background:transparent;padding:3px 4px;border-radius:5px;font-size:13px;color:var(--ink)}
+  .subtaskText:hover{background:#f4f1ec}
+  .subtaskText:focus{outline:2px solid var(--accent);background:#fff}
+  .subtaskDel{border:none;background:transparent;color:#cfc8be;cursor:pointer;font-size:13px;padding:2px 4px;border-radius:5px}
+  .subtaskDel:hover{color:var(--bang);background:var(--bangbg)}
+  .addSubtask{margin-top:2px;background:none;border:1px dashed var(--line);color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;align-self:flex-start}
+  .addSubtask:hover{border-color:var(--accent);color:var(--accent-ink)}
+
+  /* sheet mapping document */
+  .docToolbar{margin:4px 0 10px}
+  .docBody{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;line-height:1.6}
+  .docEdit{width:100%;border:none;background:transparent;resize:none;padding:8px 4px;border-radius:6px;color:#3d3a35;font-size:14px;line-height:1.6;overflow:hidden}
+  .docEdit:hover{background:#f6f3ee}
+  .docEdit:focus{outline:2px solid var(--accent);background:#fff}
+  .docNotes{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
 
   /* urgency */
   select.urgency{appearance:none;-webkit-appearance:none;border:1px solid var(--line);border-radius:7px;font-weight:700;font-size:11px;padding:4px 6px;cursor:pointer;flex:none;background:var(--nonebg);color:var(--none)}
@@ -187,9 +188,9 @@
   .retroMalformed{font-size:11.5px;font-weight:600;color:var(--bang)}
   .retroBody{display:none;margin-top:8px;line-height:1.6}
   .retroCard.expanded .retroBody{display:block}
-  .retroBody h1,.retroBody h2,.retroBody h3{font-size:16px;margin:10px 0 4px}
-  .retroBody code{background:#f0ede8;border-radius:4px;padding:1px 5px;font-size:12.5px}
-  .retroBody pre{background:#f6f3ee;border-radius:8px;padding:8px;overflow:auto}
+  .retroBody h1,.retroBody h2,.retroBody h3,.docBody h1,.docBody h2,.docBody h3{font-size:16px;margin:10px 0 4px}
+  .retroBody code,.docBody code{background:#f0ede8;border-radius:4px;padding:1px 5px;font-size:12.5px}
+  .retroBody pre,.docBody pre{background:#f6f3ee;border-radius:8px;padding:8px;overflow:auto}
 </style>
 
 <div class="wrap">
@@ -197,11 +198,9 @@
   <input id="docSub" class="subInput">
 
   <div class="tabs" id="tabs"></div>
-  <div class="progress" id="progress"></div>
 
   <div class="toolbar">
     <button class="tb primary" id="addSection">+ Seção</button>
-    <button class="tb primary" id="addAba">+ Aba</button>
     <button class="tb primary" id="addSprint">+ Sprint</button>
     <button class="tb primary" id="addPendingItem">+ Novo item pendente</button>
     <button class="tb bangfilter" id="filterBang">❗ Só pendências externas (0)</button>
@@ -216,7 +215,7 @@
   </div>
 
   <div id="view-backlog">
-    <div class="hint">Arraste <b>⋮⋮</b> para reordenar. Marque <b>✓</b> quando um item estiver concluído — as abas ligadas a ele (no Mapa) acendem como aposentáveis.</div>
+    <div class="hint">Arraste <b>⋮⋮</b> para reordenar. Escolha o tipo de progresso de um item para desbloquear os demais campos.</div>
     <div id="diagram" class="diagram"></div>
     <div class="legend">
       <span class="chip E">E</span> existente
@@ -233,8 +232,16 @@
   </div>
 
   <div id="view-mapa">
-    <div class="hint">Cada aba da planilha da Maely. Em <b>“Coberta por”</b>, vincule ao item ou à seção do backlog que a substitui. Quando o vínculo estiver concluído, a aba fica <b>aposentável</b>.</div>
-    <div id="abas"></div>
+    <div class="docToolbar"><button class="tb" id="toggleDocMode">Editar</button></div>
+    <div id="sheetDocView" class="docBody"></div>
+    <textarea id="sheetDocEdit" class="docEdit" rows="1" style="display:none"></textarea>
+    <div class="docNotes">
+      <div class="noteList" id="docNoteList"></div>
+      <div class="noteAddRow">
+        <input class="noteInput" id="docNoteInput" placeholder="adicionar nota sobre este documento…">
+        <button class="noteAddBtn" id="docAddNote">+</button>
+      </div>
+    </div>
   </div>
 
   <div id="view-sprints">
@@ -282,7 +289,7 @@ const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&g
 const el=id=>document.getElementById(id);
 
 /* ---------- default data ---------- */
-function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],confirm:!!a[1],done:false,notes:[],text:a[2],sprintId:null,pendingResolved:false,urgency:'media'}));}
+function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],confirm:!!a[1],progressType:null,done:false,subtasks:[],percent:0,text:a[2],sprintId:null,pendingResolved:false,urgency:'media'}));}
 const DEFAULT_STATE={
   docTitle:'Documento de Desenvolvimento do Aplicativo',docSub:'Spasso',activeView:'sprints',
   footNote:'A sequência das seções reflete a dependência lógica entre as frentes, não a ordem de execução. No planejamento de sprints, frentes independentes — como Precificação e Fundação — podem avançar em paralelo.',
@@ -314,24 +321,8 @@ const DEFAULT_STATE={
     {id:'sec-diferidos',title:'Itens diferidos',subtitle:'Baixa prioridade',intro:'',
      items:mkItems([['A',0,'Basis histórico interpolado: consolidar a origem dos dados em base centralizada.']])},
   ],
-  abas:[
-    {id:'aba-dms',name:'dms',tipo:'Referência',status:'A',coveredBy:['sec-fundacao'],papel:'Listas de domínio: commodity+bolsa (com volume/lote), calendário, tipos de movimento de caixa e de liquidação.'},
-    {id:'aba-precos-mtm',name:'Preços_MTM',tipo:'Registro',status:'A',coveredBy:['sec-captura'],papel:'Preços de fechamento (bolsa), FX e preço físico por praça — base do MTM.'},
-    {id:'aba-analitico-deriv',name:'Analítico_Deriv',tipo:'Registro',status:'A',coveredBy:['sec-registro'],papel:'Livro de derivativos (futuros/dólar), imutável, com vínculo de offset. Chaves Trade ID / Contrato StoneX.'},
-    {id:'aba-analitico-deriv-op',name:'Analítico_Deriv_Op',tipo:'Registro',status:'N',coveredBy:['sec-registro'],papel:'Livro de opções (Call), vinculado ao derivativo.'},
-    {id:'aba-lb-vig',name:'Op. Long_Basis_Vig',tipo:'Registro',status:'A',coveredBy:['sec-registro'],papel:'Operações físicas de Long Basis vigentes, ligadas a derivativo + NDF.'},
-    {id:'aba-lb-liq',name:'Op. Long_Basis_Liq',tipo:'Registro',status:'A',coveredBy:['sec-registro'],papel:'Operações de Long Basis liquidadas (Entrada/Saída).'},
-    {id:'aba-liquidacoes',name:'Liquidações.Derivativos',tipo:'Registro',status:'N',coveredBy:['sec-posicao'],papel:'Registro de liquidações (offset), resultado em USD/BRL.'},
-    {id:'aba-caixa',name:'Caixa_Corretoras',tipo:'Registro',status:'N',coveredBy:['sec-risco'],papel:'Caixa da corretora: saldo + livro de movimentos (IRRF etc.).'},
-    {id:'aba-precos-mtm2',name:'Din.MTM_LB',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'MTM dinâmico de uma operação Long Basis (resumo por praça/componente).'},
-    {id:'aba-mtm-lb',name:'MTM_LB-Milho-26',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'MTM parcial da operação LB Milho, por praça e por componente.'},
-    {id:'aba-reporte-liq',name:'Reporte_Liq',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'Resultado de uma liquidação por componente (físico/bolsa/dólar), basis e R$/sc.'},
-    {id:'aba-resumo',name:'Resumo_Derivativos',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'Exposição (tons/cambial/basis) e MTM consolidado em R$.'},
-    {id:'aba-evolucao',name:'Evolução_MTM',tipo:'Reporte',status:'N',coveredBy:['sec-posicao'],papel:'Série diária do MTM Total — histórico (snapshot temporal).'},
-    {id:'aba-var-cambial',name:'Var_Cambial',tipo:'Reporte',status:'N',coveredBy:['sec-risco'],papel:'Movimentações de caixa por tipo, caixa inicial/final, variação cambial.'},
-    {id:'aba-fluxo',name:'Fluxo_Caixa',tipo:'Reporte',status:'N',coveredBy:['sec-risco'],papel:'Projeção de fluxo de caixa por empresa/corretora/commodity/mês.'},
-    {id:'aba-gestao',name:'Gestão_Stonex',tipo:'Reporte',status:'N',coveredBy:['sec-risco'],papel:'Caixa, MTM, net de liquidação, margem, consumo, saldo e stress (limite StoneX).'},
-  ],
+  notes:[],
+  sheetMappingDoc:'# Mapeamento da Planilha da Maely — `Controle_Derivativos.xlsx`\n\n> **Objetivo:** a planilha é o alvo funcional. Tudo que ela **registra** e **reporta** o app precisa passar a fazer, mantendo **log** (quem/quando/o quê) e **histórico** (estado ao longo do tempo).\n> Status: `[E]` existe · `[A]` a adaptar · `[N]` novo · `(!)` pendência externa. · Revisão: 13/jul/2026, lida diretamente do arquivo.\n\n---\n\n## 1. O que a planilha é\n\nControle completo de hedge da **Intergrãos** (grupo Spasso), operando via **StoneX**, em **Soja e Milho** (CBOT e BMF) com **perna de dólar/NDF**. Cobre:\n\n- **Registro** de cada operação de bolsa (futuros e opções) e de cada operação física de Long Basis, com vínculo entre elas.\n- **Cálculo** de MTM diário decomposto em **físico + bolsa + dólar**, custos de carrego, exposição, stress e margem.\n- **Reporte** de posição consolidada, resultado de liquidações, caixa da corretora, variação cambial, fluxo de caixa e gestão de limite/margem.\n\nAs 16 abas se dividem em **domínio/referência**, **registro (captura)**, **cálculo** e **reporte**.\n\n---\n\n## 2. As 16 abas e seus papéis\n\n| Aba | Papel | Camada no app | Registro/Reporte | Status |\n|---|---|---|---|---|\n| `dms` | Listas de domínio: commodity+bolsa (com volume/lote), calendário, tipos de movimento de caixa, tipos de liquidação | Entidades primárias + enums | Registro | A |\n| `Preços_MTM` | Preços de fechamento (bolsa), FX (dólar) e preço físico por praça | Lançamento (captura de preços) | Registro | A |\n| `Analítico_Deriv` | Livro de derivativos: cada operação de bolsa (futuro/dólar), imutável, com vínculo de offset | Entidade secundária (Derivativo) + cálculo MTM | Registro + cálculo | A/N |\n| `Analítico_Deriv_Op` | Livro de opções (Call), vinculado ao derivativo | Entidade secundária (Opção) + cálculo MTM | Registro + cálculo | N |\n| `Op. Long_Basis_Vig` | Operações físicas de Long Basis **vigentes**, ligadas a derivativo + NDF | Entidade secundária (Operação física) + cálculo | Registro + cálculo | A |\n| `Op. Long_Basis_Liq` | Operações de Long Basis **liquidadas** (Entrada/Saída) | Idem, estado liquidado | Registro + cálculo | A |\n| `Liquidações.Derivativos` | Registro de liquidações (offset), resultado em USD/BRL | Entidade secundária (Liquidação) | Registro | N |\n| `Caixa_Corretoras` | Caixa da corretora: saldo + livro de movimentos (IRRF, etc.) | Entidade secundária (Movimento de caixa) | Registro + cálculo | N |\n| `MTM_LB-Milho-26` / `Din.MTM_LB` | MTM parcial de uma operação Long Basis, por praça e por componente | Relatório de MTM por operação | Reporte | N |\n| `Reporte_Liq` | Resultado de uma liquidação por componente (físico/bolsa/dólar), basis e R$/sc | Relatório de liquidação | Reporte | N |\n| `Resumo_Derivativos` | Exposição (tons), exposição cambial (USD), exposição a basis, MTM consolidado (R$) | Dashboard de posição/exposição | Reporte | N |\n| `Evolução_MTM` | Série diária do MTM Total | Histórico (snapshot temporal) | Reporte + histórico | N |\n| `Var_Cambial` | Movimentações de caixa por tipo, caixa inicial/final, variação cambial | Relatório de caixa e variação cambial | Reporte | N |\n| `Fluxo_Caixa` | Projeção de fluxo de caixa por empresa/corretora/commodity/mês | Relatório de fluxo de caixa | Reporte | N |\n| `Gestão_Stonex` | Caixa, MTM, net de liquidação, margem inicial/variação, consumo, saldo, stress | Gestão de limite e margem (risco) | Reporte | N |\n\n---\n\n## 3. Entidades primárias (dados mestres)\n\nConfirmadas pela planilha, alimentam os cadastros da Fundação:\n\n- **Empresa** `[A]` — multi-empresa confirmado: aparecem filiais/CNPJs distintos ("Intergrãos MT", "Intergrãos MG", "Intergran MG", "Intergran GO").\n- **Corretora** `[N]` — StoneX (com conta associada à empresa).\n- **Commodity + Bolsa** `[A]` — Soja/CBOT, Milho/BMF, Milho/CBOT, Dólar/BMF; cada par tem **volume por lote** (ex.: Soja CBOT ≈ 136.078 kg, Milho BMF = 27.000 kg). Vira registry (agnóstico).\n- **Praça/Unidade** `[A]` — Confresa e Matupa (MT), Sacramento (MG).\n- **Contraparte** `[A]` — produtores (pessoa física/jurídica) na compra e tradings (ex.: LDC) na venda. Estender o cadastro de Produtor para "Contraparte".\n- **Safra** `[A]` — Safra Atual / Safra Próxima (vira dimensão).\n- **Calendário** `[A]` — dimensão de datas (dia/mês/ano) usada para agrupar comissão, fluxo e liquidação.\n\n**Enums** (listas de `dms`): tipos de movimento de caixa (envio de recurso próprio, juros de limite, prêmio de opção, reversão, saque, selldown, transferência interna, IRRF); tipos de liquidação (offset antecipado / por vencimento).\n\n---\n\n## 4. Entidades secundárias (transacionais)\n\n- **Derivativo** (`Analítico_Deriv`, IDs `F1…F24`) `[A]` — campos-chave: Data Hedge, Status Extrato (Vigente/Liquidado), Commodity, Safra, **Movimento (Entrada/Saída)**, **Vínculo** (IDs que a saída zera), **Trade ID** e **Contrato** (chaves únicas StoneX), Empresa, Corretora, Operação (Compra/Venda), Estratégia (Futuro/Opção), N° Lotes, Bolsa, Referência (ticker), Strike, Data Expiração/Vencimento, Notional USD, Operação Vinculada (ex.: LB-Soja-26).\n  - **Modelo idêntico ao do app:** operação imutável; a Saída referencia as Entradas que liquida (ex.: `F8` zera `F2;F3;F4;F5;F6`). Reaproveita a imutabilidade + vínculo já existentes em ordens.\n- **Opção** (`Analítico_Deriv_Op`, `O#`) `[N]` — Call, com Strike, Data de Expiração, Preço, FV, MTM; vinculada ao derivativo.\n- **Operação física / Long Basis** (`Op. Long_Basis_*`, `LB#`) `[A]` — liga contraparte + praça + volume + preço negociado ao derivativo (`ID Derivativo Commo`) e ao NDF; carrega o MTM decomposto e os custos.\n- **Liquidação** (`Liquidações.Derivativos`) `[N]` — volume, data, taxa BRL/USD, liquidação USD/BRL, IDs vinculados, tipo de liquidação.\n- **Movimento de caixa da corretora** (`Caixa_Corretoras`) `[N]` — data, empresa, corretora, valor USD/BRL, tipo de movimentação, origem/destino.\n\n---\n\n## 5. Lançamentos (captura que popula bases, não são entidades)\n\n- **Preços de MTM** (`Preços_MTM`) `[A]` — três origens num mesmo lançamento: (a) cotação de bolsa por ticker (FV), (b) FX/dólar, (c) **preço físico por praça** (commodity × safra × praça → preço, com vencimento). Alimenta todo o cálculo de MTM.\n\n---\n\n## 6. Cálculos (viram engines Python — nunca no front, P07)\n\nAs fórmulas da planilha são a especificação. Principais motores a extrair:\n\n- **MTM decomposto** `[A/N]` — Físico + Bolsa + Dólar → Total; e MTM por saca. Regras diferem por bolsa (CBOT vs BMF) e moeda (BRL vs USD).\n- **Custos de carrego** `[A]` — custo financeiro (juros do período sobre o preço) + outros custos (custos por saca). Já existe modelo de custo/carrego na precificação; reconciliar.\n- **Exposição** `[N]` — em tons, cambial (USD, CBOT + NDF) e a basis, por empresa/safra/natureza.\n- **Conversões** `[A]` — kg ↔ sacas (÷60) ↔ lotes ↔ tons; notional; exposição em kg.\n- **Basis** `[A]` — basis de entrada, basis atual e evolução do basis (liga ao histórico de basis que o app já tem).\n- **Stress / risco** `[N]` — choque por chave commodity+bolsa; MTM sob stress; base para VaR.\n- **Margem** `[N]` — margem inicial/variação, consumo, saldo disponível, margeamento (gestão de limite StoneX).\n\n---\n\n## 7. Relatórios (o "reportar tudo")\n\nCada um vira uma visão consolidada no app, calculada a partir dos registros:\n\n- **Posição e exposição** (`Resumo_Derivativos`): exposição em tons, cambial e a basis; MTM em R$ por produto/safra.\n- **MTM por operação** (`MTM_LB-*`, `Din.MTM_LB`): MTM e custo por saca, por praça e por componente.\n- **Resultado de liquidação** (`Reporte_Liq`): resultado por componente, basis entrada/saída, R$/sc.\n- **Caixa e variação cambial** (`Var_Cambial`, `Caixa_Corretoras`): movimentos por tipo, caixa inicial/final, variação passiva/ativa.\n- **Fluxo de caixa** (`Fluxo_Caixa`): projeção por empresa/commodity/mês.\n- **Gestão de limite/margem** (`Gestão_Stonex`): net de liquidação, margem, saldo, stress.\n\n---\n\n## 8. Log e histórico — requisito central\n\nHoje a planilha **não tem trilha** e tem só um histórico manual e parcial (`Evolução_MTM`, snapshot diário do MTM Total). No app, separam-se em duas coisas:\n\n- **Log (auditoria)** `[E/A]` — quem/quando/o quê em cada registro e alteração. O app já tem o padrão `ActivityLog`; estender a todas as tabelas transacionais desta planilha.\n- **Histórico (snapshots temporais)** `[N]` — para reconstruir qualquer data, o app precisa **fotografar diariamente** posição, MTM (por componente), preços de MTM, caixa e margem. `Evolução_MTM` é o embrião disso, feito à mão; no app vira captura automática/versionada. Implica tabelas temporais (snapshot por data) para posição, MTM, preços e caixa.\n- **Imutabilidade** `[E]` — operações não são editadas; correção/zeragem cria nova operação vinculada. A planilha já opera assim (Entrada/Saída + Vínculo), e o app também — preserva histórico por design.\n\n---\n\n## 9. Como encaixa no backlog\n\n| Seção do backlog | O que a planilha detalha |\n|---|---|\n| Fundação / Cadastros | Empresa (multi-CNPJ), Corretora, Conta, Commodity+Bolsa (com lote), Praça, Contraparte, Safra |\n| Captura | Livros de derivativo/opção/Long Basis, liquidações, caixa, lançamento de preços de MTM |\n| Registro de hedge | `Analítico_Deriv` (boletagem, chaves StoneX, Entrada/Saída+Vínculo); conciliação = Status Extrato vs. extrato StoneX |\n| Posição/MTM | `Resumo_Derivativos`, engines de MTM, `Evolução_MTM` (histórico) |\n| Risco/contábil | `Gestão_Stonex` (margem/stress), exposição, VaR; `Var_Cambial` |\n| Caixa | `Caixa_Corretoras`, `Fluxo_Caixa` |\n\n---\n\n## 10. Pendências externas `(!)`\n\n- **Parâmetros de risco/margem/stress** — margem inicial/variação (hoje fixas em USD 250.000), choques de stress por commodity, limites: dependem da área de risco (Maely).\n- **Regras de custo de carrego** — os coeficientes por saca e a taxa de juros usados nos custos precisam ser confirmados como política (Maely).\n- **Integração Sankhya** — posição física e contrapartes podem vir do ERP; depende de decisão/ação da Spasso.\n- **Contábil** — tratamento contábil das liquidações e do IRRF, e reporte à Fato: depende da contabilidade.\n',
   sprints:[],
   pendingItems:[]
 };
@@ -341,20 +332,25 @@ let state, sortables=[], docVersion=0;
 /* ---------- lookups ---------- */
 const getSection=id=>state.sections.find(s=>s.id===id);
 function getItem(id){for(const s of state.sections){const it=s.items.find(i=>i.id===id);if(it)return it;}}
-const getAba=id=>state.abas.find(a=>a.id===id);
-function nodeDone(id){
-  const s=state.sections.find(x=>x.id===id);
-  if(s)return s.items.length>0&&s.items.every(i=>i.done);
-  for(const sec of state.sections){const it=sec.items.find(x=>x.id===id);if(it)return !!it.done;}
-  return false;
+function itemProgress(it){
+  if(!it||!it.progressType)return 0;
+  if(it.progressType==='check')return it.done?100:0;
+  if(it.progressType==='percent')return Math.max(0,Math.min(100,+it.percent||0));
+  if(it.progressType==='subtasks'){
+    const subs=it.subtasks||[];
+    if(!subs.length)return 0;
+    return Math.round(subs.filter(s=>s.done).length/subs.length*100);
+  }
+  return 0;
 }
-function nodeLabel(id){
-  const s=state.sections.find(x=>x.id===id);if(s)return '▸ '+s.title;
-  for(const sec of state.sections){const it=sec.items.find(x=>x.id===id);if(it)return '• '+(it.text||'item').slice(0,42);}
-  return '(removido)';
+function itemNotes(it){return state.notes.filter(n=>n.target&&n.target.type==='item'&&n.target.id===it.id);}
+function docNotes(){return state.notes.filter(n=>n.target&&n.target.type==='doc'&&n.target.id==='sheet-mapping-doc');}
+function noteTargetLabel(target){
+  if(!target)return '(destino)';
+  if(target.type==='item'){const it=getItem(target.id);return it?(it.text||'(item sem texto)').slice(0,60):(target.label||'(item removido)');}
+  if(target.type==='section'){const s=getSection(target.id);return s?(s.title||'(seção sem título)'):(target.label||'(seção removida)');}
+  return target.label||'(destino)';
 }
-const abaAposentavel=a=>a.coveredBy.length>0&&a.coveredBy.every(nodeDone);
-const coverersOf=nodeId=>state.abas.filter(a=>a.coveredBy.includes(nodeId));
 
 /* ---------- persistence ---------- */
 let saveT, saveInFlight=false, savePending=false;
@@ -388,48 +384,76 @@ async function doSave(){
 
 /* ---------- backlog render ---------- */
 function statusOptions(sel){return [['','—'],['E','E'],['A','A'],['N','N'],['P','P']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
-function badgesFor(nodeId){
-  const covs=coverersOf(nodeId);if(!covs.length)return '';
-  return `<div class="marco">${covs.map(a=>{const ok=abaAposentavel(a);
-    return `<span class="abaTag ${ok?'ok':''}" title="${ok?'pode ser abandonada':'aguardando conclusão'}">🗑 ${esc(a.name)}${ok?' ✓':''}</span>`;}).join('')}</div>`;
-}
 function urgencyOptions(sel){return [['baixa','Baixa'],['media','Média'],['alta','Alta']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
 function formatNoteTs(ts){try{return new Date(ts).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});}catch(e){return '';}}
-function noteListHTML(it){
-  return (it.notes||[]).map(n=>`<div class="noteEntry"><span class="noteMeta">${esc(n.author)} · ${formatNoteTs(n.ts)}</span><span class="noteText">${esc(n.text)}</span></div>`).join('');
+function noteListHTML(notes){
+  return (notes||[]).map(n=>`<div class="noteEntry"><span class="noteMeta">${esc(n.author)} · ${formatNoteTs(n.ts)}</span><span class="noteText">${esc(n.text)}</span></div>`).join('');
 }
 function sprintLabel(sp){
   if(!sp)return '(sprint removido)';
   return `Sprint ${sp.number||'?'}`+(sp.name?` — ${sp.name}`:'');
 }
-function sprintPickHTML(it){
+function sprintPickHTML(it,locked){
   let o='<option value="">— sem sprint —</option>';
   state.sprints.forEach(sp=>{o+=`<option value="${sp.id}" ${sp.id===it.sprintId?'selected':''}>${esc(sprintLabel(sp))}</option>`;});
-  return `<select class="sprintPick" data-role="sprintPick">${o}</select>`;
+  return `<select class="sprintPick" data-role="sprintPick" ${locked?'disabled':''}>${o}</select>`;
 }
 function sprintBadgeHTML(it){
   if(!it.sprintId)return '';
   const sp=state.sprints.find(s=>s.id===it.sprintId);
   return `<button class="sprintBadge" data-role="gotoSprint" data-sprint-id="${it.sprintId}">→ ${esc(sprintLabel(sp))}</button>`;
 }
+function typePickerHTML(){
+  return `<div class="typePicker">
+    <button class="tb" data-role="setProgressType" data-type="check">Tarefa simples</button>
+    <button class="tb" data-role="setProgressType" data-type="subtasks">Tarefa com subtarefas</button>
+    <button class="tb" data-role="setProgressType" data-type="percent">Progresso manual</button>
+  </div>`;
+}
+function progressControlHTML(it,locked){
+  if(locked)return `<input type="checkbox" class="done" data-role="done" disabled title="Escolha um tipo de progresso">`;
+  if(it.progressType==='check')return `<input type="checkbox" class="done" data-role="done" ${it.done?'checked':''} title="Concluído">`;
+  if(it.progressType==='subtasks'){
+    const allDone=it.subtasks.length>0&&it.subtasks.every(s=>s.done);
+    return `<input type="checkbox" class="done" data-role="subtasksAllDone" ${allDone?'checked':''} title="Marcar todas as subtarefas">`;
+  }
+  if(it.progressType==='percent')return `<input type="number" class="percentInput" data-role="percent" min="0" max="100" value="${it.percent||0}" title="Progresso (%)">`;
+  return '';
+}
+function subtasksHTML(it){
+  if(it.progressType!=='subtasks')return '';
+  const rows=(it.subtasks||[]).map(st=>`<div class="subtaskRow" data-stid="${st.id}">
+    <input type="checkbox" class="subtaskDone" data-role="subtaskDone" ${st.done?'checked':''}>
+    <input class="subtaskText" data-role="subtaskText" value="${esc(st.text)}" placeholder="subtarefa…">
+    <button class="subtaskDel" data-role="delSubtask" title="Remover subtarefa">✕</button>
+  </div>`).join('');
+  return `<div class="subtasksBlock" data-role="subtasksBlock">
+    ${rows}
+    <button class="addSubtask" data-role="addSubtask">+ subtarefa</button>
+  </div>`;
+}
 function itemHTML(it,opts){
   opts=opts||{};
-  const hasNotes=(it.notes||[]).length>0;
-  return `<div class="item ${hasNotes?'showNote':''} ${it.confirm?'hasBang':''} ${it.done?'isDone':''}" data-iid="${it.id}">
-    <input type="checkbox" class="done" data-role="done" ${it.done?'checked':''} title="Concluído">
-    <select class="status ${it.status||''}" data-role="status">${statusOptions(it.status||'')}</select>
-    <button class="bang ${it.confirm?'on':''}" data-role="confirm" title="Pendência externa">!</button>
-    <select class="urgency urgency-${it.urgency||'media'}" data-role="urgency" title="Urgência">${urgencyOptions(it.urgency||'media')}</select>
+  const locked=!it.progressType;
+  const notes=itemNotes(it);
+  const hasNotes=notes.length>0;
+  const complete=itemProgress(it)===100;
+  return `<div class="item ${hasNotes?'showNote':''} ${it.confirm?'hasBang':''} ${complete?'isDone':''}" data-iid="${it.id}">
+    <div class="itemProgress">${progressControlHTML(it,locked)}</div>
+    <select class="status ${it.status||''}" data-role="status" ${locked?'disabled':''}>${statusOptions(it.status||'')}</select>
+    <button class="bang ${it.confirm?'on':''}" data-role="confirm" title="Pendência externa" ${locked?'disabled':''}>!</button>
+    <select class="urgency urgency-${it.urgency||'media'}" data-role="urgency" title="Urgência" ${locked?'disabled':''}>${urgencyOptions(it.urgency||'media')}</select>
     <div class="itemMain">
       <textarea class="itemText" data-role="text" rows="1">${esc(it.text)}</textarea>
-      ${badgesFor(it.id)}
-      <div class="itemSprintRow">${sprintPickHTML(it)}${sprintBadgeHTML(it)}</div>
-      <button class="noteToggle" data-role="noteToggle">${hasNotes?'<span class="dot">●</span> notas ('+it.notes.length+')':'+ nota'}</button>
+      ${locked?typePickerHTML():''}
+      ${subtasksHTML(it)}
+      <div class="itemSprintRow">${sprintPickHTML(it,locked)}${sprintBadgeHTML(it)}</div>
+      <button class="noteToggle" data-role="noteToggle" ${locked?'disabled':''}>${hasNotes?'<span class="dot">●</span> notas ('+notes.length+')':'+ nota'}</button>
       <div class="note" data-role="noteBlock">
-        <div class="noteList">${noteListHTML(it)}</div>
+        <div class="noteList">${noteListHTML(notes)}</div>
         <div class="noteAddRow">
-          <input class="noteInput" data-role="noteInput" placeholder="adicionar nota…">
-          <button class="noteAddBtn" data-role="addNote">+</button>
+          <input class="noteInput" data-role="noteInput" placeholder="adicionar nota…" ${locked?'disabled':''}>
+          <button class="noteAddBtn" data-role="addNote" ${locked?'disabled':''}>+</button>
         </div>
       </div>
     </div>
@@ -437,7 +461,7 @@ function itemHTML(it,opts){
   </div>`;
 }
 function sectionHTML(s){
-  const allDone=s.items.length>0&&s.items.every(i=>i.done);
+  const allDone=s.items.length>0&&s.items.every(i=>itemProgress(i)===100);
   return `<div class="section" data-sid="${s.id}">
     <div class="secHead">
       <span class="handle sec-handle">⋮⋮</span>
@@ -448,11 +472,10 @@ function sectionHTML(s){
         </div>
         <input class="secSub" data-role="secSub" value="${esc(s.subtitle)}" placeholder="subtítulo">
         <textarea class="secIntro" data-role="secIntro" rows="1" placeholder="introdução…">${esc(s.intro)}</textarea>
-        ${badgesFor(s.id)}
       </div>
       <button class="secDel" data-role="delSection" title="Remover seção">🗑</button>
     </div>
-    <div class="items" data-sid="${s.id}">${s.items.map(itemHTML).join('')}</div>
+    <div class="items" data-sid="${s.id}">${s.items.map(it=>itemHTML(it)).join('')}</div>
     <button class="addItem" data-role="addItem">+ item</button>
   </div>`;
 }
@@ -475,44 +498,28 @@ function applyFilter(){
   document.querySelectorAll('#sections > .section').forEach(sec=>{sec.style.display=(on&&!sec.querySelector('.item.hasBang'))?'none':'';});
 }
 
-/* ---------- mapa render ---------- */
-function coverOptions(){
-  let o='<option value="">+ vincular…</option>';
-  state.sections.forEach(s=>{
-    o+=`<optgroup label="${esc(s.title)}"><option value="${s.id}">▸ ${esc(s.title)} (seção inteira)</option>`;
-    s.items.forEach(it=>{o+=`<option value="${it.id}">• ${esc((it.text||'item').slice(0,48))}</option>`;});
-    o+='</optgroup>';
-  });
-  return o;
+/* ---------- sheet mapping document render ---------- */
+let sheetDocEditing=false;
+function renderSheetDoc(){
+  const viewEl=el('sheetDocView'),editEl=el('sheetDocEdit');
+  if(sheetDocEditing){
+    viewEl.style.display='none';editEl.style.display='block';
+    editEl.value=state.sheetMappingDoc||'';
+    autosize(editEl);
+    el('toggleDocMode').textContent='Visualizar';
+  }else{
+    editEl.style.display='none';viewEl.style.display='block';
+    try{viewEl.innerHTML=window.marked?marked.parse(state.sheetMappingDoc||''):esc(state.sheetMappingDoc||'');}catch(e){viewEl.innerHTML=esc(state.sheetMappingDoc||'');}
+    el('toggleDocMode').textContent='Editar';
+  }
+  el('docNoteList').innerHTML=noteListHTML(docNotes());
 }
-function abaHTML(a){
-  const apos=abaAposentavel(a),covered=a.coveredBy.length>0;
-  const chips=a.coveredBy.length?a.coveredBy.map(id=>`<span class="covChip ${nodeDone(id)?'done':''}">${esc(nodeLabel(id))}<button data-role="unlink" data-aid="${a.id}" data-node="${id}">✕</button></span>`).join(''):'<span class="noneTxt">— sem vínculo —</span>';
-  return `<div class="aba" data-aid="${a.id}">
-    <div class="abaHead">
-      <span class="handle aba-handle">⋮⋮</span>
-      <input class="abaName" data-role="abaName" value="${esc(a.name)}">
-      <select class="status ${a.status||''}" data-role="abaStatus">${statusOptions(a.status||'')}</select>
-      <span class="tipo">${esc(a.tipo||'')}</span>
-      <button class="itemDel" data-role="delAba" title="Remover aba">✕</button>
-    </div>
-    <textarea class="abaPapel" data-role="abaPapel" rows="1" placeholder="papel / camada…">${esc(a.papel)}</textarea>
-    <div class="cobertura"><span class="cobLabel">Coberta por:</span>${chips}
-      <select class="coverPick" data-role="cover" data-aid="${a.id}">${coverOptions()}</select>
-    </div>
-    <div class="abaState ${apos?'ok':covered?'wait':'nolink'}">${apos?'✓ pode ser abandonada':covered?'aguardando conclusão do vínculo':'sem vínculo definido'}</div>
-  </div>`;
-}
-function renderMapa(){
-  el('abas').innerHTML=state.abas.map(abaHTML).join('');
-  document.querySelectorAll('.abaPapel').forEach(autosize);
-  initAbaSortable();
-}
-function updateProgress(){
-  const total=state.abas.length;
-  const cob=state.abas.filter(a=>a.coveredBy.length>0).length;
-  const apos=state.abas.filter(abaAposentavel).length;
-  el('progress').innerHTML=`Planilha da Maela — <b>${cob}/${total}</b> abas cobertas pelo backlog · <b class="aposN">${apos}</b> aposentáveis`;
+function addNoteToDoc(){
+  const inp=el('docNoteInput');
+  const v=(inp.value||'').trim();if(!v)return;
+  state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,target:{type:'doc',id:'sheet-mapping-doc',label:'Mapa da Planilha'}});
+  inp.value='';
+  renderSheetDoc();save();
 }
 /* ---------- sprints render ---------- */
 let expandedSprints=new Set();
@@ -523,7 +530,7 @@ function assignedItems(sprintId){
 function sprintStatusOptions(sel){return [['planned','Planejado'],['active','Ativo'],['done','Concluído']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
 function sprintHTML(sp){
   const items=assignedItems(sp.id);
-  const total=items.length,done=items.filter(i=>i.done).length;
+  const total=items.length,done=items.filter(i=>itemProgress(i)===100).length;
   const pct=total?Math.round(done/total*100):0;
   const expanded=expandedSprints.has(sp.id);
   return `<div class="sprintCard ${expanded?'expanded':''}" data-spid="${sp.id}">
@@ -646,7 +653,7 @@ function renderRetro(){
   el('retroList').innerHTML=retroCache.map((f,i)=>retroEntryHTML(f,i)).join('')||'<div class="hint">Nenhuma retrospectiva encontrada.</div>';
 }
 
-function renderAll(){renderBacklog();renderMapa();renderSprints();renderPending();updateProgress();}
+function renderAll(){renderBacklog();renderSheetDoc();renderSprints();renderPending();}
 
 function autosize(e){if(!e)return;e.style.height='auto';e.style.height=e.scrollHeight+'px';}
 function autosizeAll(){document.querySelectorAll('.secIntro,.itemText,#footNote').forEach(autosize);}
@@ -661,7 +668,7 @@ function rebuildBacklogFromDOM(){
     secEl.querySelectorAll('.items > .item').forEach(itEl=>{const it=itemMap[itEl.dataset.iid];if(it)items.push(it);});
     s.items=items;ns.push(s);
   });
-  state.sections=ns;updateDiagram();updateProgress();save();
+  state.sections=ns;updateDiagram();save();
 }
 function initSortables(){
   sortables.filter(s=>s._bl).forEach(s=>{try{s.destroy()}catch(e){}});
@@ -669,15 +676,6 @@ function initSortables(){
   if(!window.Sortable)return;
   const a=Sortable.create(el('sections'),{handle:'.sec-handle',draggable:'.section',animation:150,onEnd:rebuildBacklogFromDOM});a._bl=1;sortables.push(a);
   document.querySelectorAll('.items').forEach(c=>{const s=Sortable.create(c,{handle:'.item-handle',group:'items',draggable:'.item',animation:150,onEnd:rebuildBacklogFromDOM});s._bl=1;sortables.push(s);});
-}
-function initAbaSortable(){
-  sortables.filter(s=>s._ab).forEach(s=>{try{s.destroy()}catch(e){}});
-  sortables=sortables.filter(s=>!s._ab);
-  if(!window.Sortable)return;
-  const s=Sortable.create(el('abas'),{handle:'.aba-handle',draggable:'.aba',animation:150,onEnd:()=>{
-    const map={};state.abas.forEach(a=>map[a.id]=a);
-    state.abas=[...document.querySelectorAll('#abas > .aba')].map(e=>map[e.dataset.aid]).filter(Boolean);save();
-  }});s._ab=1;sortables.push(s);
 }
 
 /* ---------- shared item-level handlers (used by Backlog and Sprints views) ---------- */
@@ -687,6 +685,10 @@ function handleItemInput(e){
   const it=getItem(itemEl.dataset.iid);if(!it)return false;
   if(r==='text'){it.text=e.target.value;autosize(e.target);save();return true;}
   if(r==='noteInput')return true;
+  if(r==='subtaskText'){
+    const row=e.target.closest('.subtaskRow');const st=it.subtasks.find(s=>s.id===row.dataset.stid);if(!st)return true;
+    st.text=e.target.value;save();return true;
+  }
   return false;
 }
 function handleItemChange(e){
@@ -697,13 +699,19 @@ function handleItemChange(e){
   if(r==='done'){it.done=e.target.checked;renderAll();save();return true;}
   if(r==='urgency'){it.urgency=e.target.value;e.target.className='urgency urgency-'+it.urgency;save();return true;}
   if(r==='sprintPick'){it.sprintId=e.target.value||null;renderAll();save();return true;}
+  if(r==='subtasksAllDone'){const v=e.target.checked;it.subtasks.forEach(st=>st.done=v);renderAll();save();return true;}
+  if(r==='percent'){let v=parseInt(e.target.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(100,v));it.percent=v;renderAll();save();return true;}
+  if(r==='subtaskDone'){
+    const row=e.target.closest('.subtaskRow');const st=it.subtasks.find(s=>s.id===row.dataset.stid);if(!st)return true;
+    st.done=e.target.checked;renderAll();save();return true;
+  }
   return false;
 }
 function addNoteFromItem(itemEl){
   const it=getItem(itemEl.dataset.iid);if(!it)return;
   const inp=itemEl.querySelector('.noteInput');
   const v=(inp.value||'').trim();if(!v)return;
-  it.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v});
+  state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,target:{type:'item',id:it.id,label:(it.text||'').slice(0,60)}});
   renderAll();save();
   const again=document.querySelector(`[data-iid="${it.id}"]`);
   if(again){again.classList.add('showNote');const i2=again.querySelector('.noteInput');if(i2)i2.focus();}
@@ -715,6 +723,17 @@ function handleItemClick(e){
   if(r==='confirm'){it.confirm=!it.confirm;it.pendingResolved=it.confirm?false:true;renderAll();save();return true;}
   if(r==='noteToggle'){itemEl.classList.toggle('showNote');if(itemEl.classList.contains('showNote')){const inp=itemEl.querySelector('.noteInput');if(inp)inp.focus();}return true;}
   if(r==='addNote'){addNoteFromItem(itemEl);return true;}
+  if(r==='setProgressType'){it.progressType=e.target.dataset.type;renderAll();save();return true;}
+  if(r==='addSubtask'){
+    it.subtasks.push({id:uid(),text:'',done:false});renderAll();save();
+    const row=document.querySelector(`[data-iid="${it.id}"] .subtasksBlock .subtaskRow:last-child .subtaskText`);
+    if(row)row.focus();
+    return true;
+  }
+  if(r==='delSubtask'){
+    const row=e.target.closest('.subtaskRow');
+    it.subtasks=it.subtasks.filter(s=>s.id!==row.dataset.stid);renderAll();save();return true;
+  }
   if(r==='gotoSprint'){
     const sid=e.target.dataset.sprintId;
     setView('sprints');expandedSprints.add(sid);renderSprints();
@@ -742,12 +761,12 @@ S.addEventListener('click',e=>{
   const r=e.target.dataset.role;if(!r)return;
   if(handleItemClick(e))return;
   if(r==='delItem'){const s=getSection(e.target.closest('.section').dataset.sid);const iid=e.target.closest('.item').dataset.iid;
-    s.items=s.items.filter(i=>i.id!==iid);state.abas.forEach(a=>a.coveredBy=a.coveredBy.filter(x=>x!==iid));renderAll();save();}
-  else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'',confirm:false,done:false,notes:[],text:'',sprintId:null,pendingResolved:false,urgency:'media'};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
+    s.items=s.items.filter(i=>i.id!==iid);state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='item'&&n.target.id===iid));renderAll();save();}
+  else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'N',confirm:false,progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,pendingResolved:false,urgency:'media'};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
   else if(r==='delSection'){const sid=e.target.closest('.section').dataset.sid;const s=getSection(sid);
     if(confirm(`Remover a seção "${s.title||'sem título'}" e seus ${s.items.length} itens?`)){
       const ids=[sid,...s.items.map(i=>i.id)];state.sections=state.sections.filter(x=>x.id!==sid);
-      state.abas.forEach(a=>a.coveredBy=a.coveredBy.filter(x=>!ids.includes(x)));renderAll();save();}}
+      state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='item'&&ids.includes(n.target.id)));renderAll();save();}}
 });
 S.addEventListener('keydown',handleItemKeydown);
 
@@ -816,16 +835,14 @@ RT.addEventListener('click',e=>{
   renderRetro();
 });
 
-/* ---------- mapa events ---------- */
-const AB=el('abas');
-AB.addEventListener('input',e=>{const r=e.target.dataset.role;const a=getAba(e.target.closest('.aba').dataset.aid);if(!a)return;
-  if(r==='abaName'){a.name=e.target.value;}else if(r==='abaPapel'){a.papel=e.target.value;autosize(e.target);}save();});
-AB.addEventListener('change',e=>{const r=e.target.dataset.role;
-  if(r==='abaStatus'){const a=getAba(e.target.closest('.aba').dataset.aid);a.status=e.target.value;e.target.className='status '+(a.status||'');updateProgress();save();}
-  else if(r==='cover'){const a=getAba(e.target.dataset.aid);const v=e.target.value;if(v&&!a.coveredBy.includes(v))a.coveredBy.push(v);renderAll();save();}});
-AB.addEventListener('click',e=>{const r=e.target.dataset.role;if(!r)return;
-  if(r==='unlink'){const a=getAba(e.target.dataset.aid);a.coveredBy=a.coveredBy.filter(x=>x!==e.target.dataset.node);renderAll();save();}
-  else if(r==='delAba'){const a=getAba(e.target.closest('.aba').dataset.aid);if(confirm(`Remover a aba "${a.name}"?`)){state.abas=state.abas.filter(x=>x.id!==a.id);renderMapa();updateProgress();save();}}});
+/* ---------- sheet mapping document events ---------- */
+el('toggleDocMode').addEventListener('click',()=>{
+  sheetDocEditing=!sheetDocEditing;renderSheetDoc();
+  if(sheetDocEditing)el('sheetDocEdit').focus();
+});
+el('sheetDocEdit').addEventListener('input',e=>{state.sheetMappingDoc=e.target.value;autosize(e.target);save();});
+el('docAddNote').addEventListener('click',addNoteToDoc);
+el('docNoteInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addNoteToDoc();}});
 
 /* ---------- tabs ---------- */
 function renderTabs(){
@@ -857,8 +874,7 @@ el('changeAuthor').addEventListener('click',()=>{
 
 /* ---------- toolbar ---------- */
 el('filterBang').addEventListener('click',()=>{document.body.classList.toggle('filtering');el('filterBang').classList.toggle('active');applyFilter();updateBangCount();});
-el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'',confirm:false,done:false,notes:[],text:'',sprintId:null,pendingResolved:false,urgency:'media'}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
-el('addAba').addEventListener('click',()=>{const a={id:uid(),name:'Nova aba',tipo:'',status:'',coveredBy:[],papel:''};state.abas.push(a);renderMapa();updateProgress();save();const n=document.querySelector(`[data-aid="${a.id}"] .abaName`);if(n){n.focus();n.select();n.scrollIntoView({behavior:'smooth',block:'center'});}});
+el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'N',confirm:false,progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,pendingResolved:false,urgency:'media'}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
 el('addSprint').addEventListener('click',()=>{
   const today=new Date().toISOString().slice(0,10);
   const nextNumber=state.sprints.reduce((m,s)=>Math.max(m,s.number||0),0)+1;
@@ -892,46 +908,53 @@ function toMarkdown(){
   md+=`## Backlog\n\n`;
   state.sections.forEach((s,i)=>{
     md+=`### ${i+1}. ${s.title}\n`;if(s.subtitle)md+=`*${s.subtitle}*\n`;if(s.intro)md+=`\n${s.intro}\n`;
-    const secApos=coverersOf(s.id);if(secApos.length)md+=`\n> 🗑 aposenta (seção): ${secApos.map(a=>a.name).join(', ')}\n`;
     md+='\n';
     s.items.forEach(it=>{
-      const ck=it.done?'[x] ':'[ ] ';const bang=it.confirm?'`(!)` ':'';const tag=it.status?`\`[${it.status}]\` `:'';
-      md+=`- ${ck}${bang}${tag}${it.text}\n`;
-      const cov=coverersOf(it.id);if(cov.length)md+=`  - 🗑 aposenta: ${cov.map(a=>a.name).join(', ')}\n`;
-      if(it.notes&&it.notes.length)it.notes.forEach(n=>{md+=`  - _nota (${n.author}): ${n.text.replace(/\n/g,' ')}_\n`;});
+      const prog=itemProgress(it);
+      const ck=prog===100?'[x] ':'[ ] ';const bang=it.confirm?'`(!)` ':'';const tag=it.status?`\`[${it.status}]\` `:'';
+      md+=`- ${ck}${bang}${tag}${it.text}`;
+      if(it.progressType==='percent')md+=` (${prog}%)`;
+      md+='\n';
+      if(it.progressType==='subtasks'&&it.subtasks.length)it.subtasks.forEach(st=>{md+=`  - [${st.done?'x':' '}] ${st.text}\n`;});
+      const notes=itemNotes(it);if(notes.length)notes.forEach(n=>{md+=`  - _nota (${n.author}): ${n.text.replace(/\n/g,' ')}_\n`;});
     });
     md+='\n';
   });
   md+=`---\n\n**Nota sobre a ordem.** ${state.footNote}\n\n`;
-  md+=`## Mapa da Planilha (${state.abas.length} abas)\n\n`;
-  md+=`| Aba | Status | Tipo | Coberta por | Aposentável |\n|---|---|---|---|---|\n`;
-  state.abas.forEach(a=>{
-    const cov=a.coveredBy.map(id=>nodeLabel(id)).join('; ')||'—';
-    md+=`| ${a.name} | ${a.status||'—'} | ${a.tipo||''} | ${cov} | ${abaAposentavel(a)?'✓ sim':'não'} |\n`;
-  });
+  md+=`## Mapa da Planilha\n\n${state.sheetMappingDoc||''}\n\n`;
   return md;
 }
 
 /* ---------- boot ---------- */
 function normalize(o){
   o.activeView=o.activeView||'sprints';
+  if(!Array.isArray(o.notes))o.notes=[];
   (o.sections||[]).forEach(s=>{s.id=s.id||uid();(s.items||[]).forEach(i=>{
     i.id=i.id||uid();
+    if(i.progressType===undefined){
+      if(i.done!==undefined){i.progressType='check';}else{i.progressType=null;}
+    }
     if(i.done===undefined)i.done=false;
+    if(!Array.isArray(i.subtasks))i.subtasks=[];
+    i.subtasks.forEach(st=>{st.id=st.id||uid();st.text=st.text||'';st.done=!!st.done;});
+    if(i.percent===undefined)i.percent=0;
     if(i.confirm===undefined)i.confirm=false;
     if(typeof i.notes==='string'){
       i.notes=i.notes.trim()?[{id:uid(),author:'—',ts:new Date(0).toISOString(),text:i.notes}]:[];
-    }else if(!Array.isArray(i.notes)){
-      i.notes=[];
-    }else{
-      i.notes.forEach(n=>{n.id=n.id||uid();n.author=n.author||'—';n.ts=n.ts||new Date(0).toISOString();});
+    }
+    if(Array.isArray(i.notes)){
+      i.notes.forEach(n=>{
+        o.notes.push({id:n.id||uid(),author:n.author||'—',ts:n.ts||new Date(0).toISOString(),text:n.text,
+          target:{type:'item',id:i.id,label:(i.text||'').slice(0,60)}});
+      });
+      delete i.notes;
     }
     if(i.sprintId===undefined)i.sprintId=null;
     if(i.pendingResolved===undefined)i.pendingResolved=false;
     if(i.urgency===undefined)i.urgency='media';
   });});
-  if(!o.abas)o.abas=JSON.parse(JSON.stringify(DEFAULT_STATE.abas));
-  o.abas.forEach(a=>{a.id=a.id||uid();if(!Array.isArray(a.coveredBy))a.coveredBy=[];if(a.papel===undefined)a.papel='';});
+  if(o.abas)delete o.abas;
+  if(o.sheetMappingDoc===undefined)o.sheetMappingDoc=DEFAULT_STATE.sheetMappingDoc;
   if(!Array.isArray(o.sprints))o.sprints=[];
   let maxNum=o.sprints.reduce((m,s)=>Math.max(m,s.number||0),0);
   o.sprints.forEach(s=>{
