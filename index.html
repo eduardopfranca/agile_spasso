@@ -20,7 +20,8 @@
   .titleInput:hover,.subInput:hover{background:#f2efe9}
   .titleInput:focus,.subInput:focus{outline:2px solid var(--accent);background:#fff}
 
-  .tabs{display:flex;gap:4px;margin:8px 0 0;position:sticky;top:0;z-index:21;background:var(--bg)}
+  .header{position:sticky;top:0;z-index:21;background:var(--bg)}
+  .tabs{display:flex;gap:4px;margin:8px 0 0}
   .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:#f1ede7;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px}
   .tab.active{background:var(--panel);color:var(--ink)}
   .diagram{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-weight:600;color:#3d3a35;line-height:1.7;margin-bottom:12px;font-size:14px}
@@ -31,7 +32,7 @@
   .chip.N{color:var(--N);background:var(--Nbg)}.chip.P{color:var(--P);background:var(--Pbg)}
   .chip.B{color:var(--bang);background:var(--bangbg)}.chip.D{color:var(--E);background:var(--Ebg)}
 
-  .toolbar{position:sticky;top:38px;z-index:20;background:var(--bg);padding:9px 0;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
+  .toolbar{background:var(--bg);padding:9px 0;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}
   button.tb{border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600;padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13.5px}
   button.tb:hover{border-color:var(--accent);color:var(--accent-ink)}
   button.tb.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -172,7 +173,10 @@
 
   /* sprints tab */
   .sprintCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
-  .sprintHead{display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap}
+  .sprintHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .sprintToggleBtn{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 4px;flex:none}
+  .sprintToggleBtn:hover{color:var(--accent-ink)}
+  .sprintNotes{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
   .sprintNumber{font-weight:700;font-size:15px;color:var(--accent-ink);flex:none;padding:3px 4px}
   .sprintName{flex:1;min-width:120px;font-weight:700;font-size:15px;border:none;background:transparent;padding:3px 4px;border-radius:6px;color:var(--ink)}
   .sprintName:hover{background:#f4f1ec}.sprintName:focus{outline:2px solid var(--accent);background:#fff}
@@ -214,27 +218,29 @@
   <input id="docTitle" class="titleInput">
   <input id="docSub" class="subInput">
 
-  <div class="tabs" id="tabs"></div>
+  <div class="header" id="header">
+    <div class="tabs" id="tabs"></div>
 
-  <div class="toolbar">
-    <button class="tb primary" id="addSection">+ Seção</button>
-    <button class="tb primary" id="addSprint">+ Sprint</button>
-    <button class="tb primary" id="addPendingItem">+ Novo item pendente</button>
-    <button class="tb bangfilter" id="filterBang">❗ Só pendências externas (0)</button>
-    <button class="tb" id="filterPending">Mostrar apenas abertas</button>
-    <select class="filterSelect" id="filterUrgency">
-      <option value="">Todas</option>
-      <option value="baixa">Baixa</option>
-      <option value="media">Média</option>
-      <option value="alta">Alta</option>
-    </select>
-    <button class="tb" id="expMd">Exportar Markdown</button>
-    <button class="tb" id="expJson">Exportar JSON</button>
-    <button class="tb" id="impBtn">Importar JSON</button>
-    <button class="tb" id="reset">Resetar</button>
-    <input type="file" id="impFile" accept="application/json,.json">
-    <button class="tb" id="changeAuthor" title="Trocar seu nome">👤 <span id="authorLabel"></span></button>
-    <span class="saveState" id="saveState"></span>
+    <div class="toolbar">
+      <button class="tb primary" id="addSection">+ Seção</button>
+      <button class="tb primary" id="addSprint">+ Sprint</button>
+      <button class="tb primary" id="addPendingItem">+ Novo item pendente</button>
+      <button class="tb bangfilter" id="filterBang">❗ Só pendências externas (0)</button>
+      <button class="tb" id="filterPending">Mostrar apenas abertas</button>
+      <select class="filterSelect" id="filterUrgency">
+        <option value="">Todas</option>
+        <option value="baixa">Baixa</option>
+        <option value="media">Média</option>
+        <option value="alta">Alta</option>
+      </select>
+      <button class="tb" id="expMd">Exportar Markdown</button>
+      <button class="tb" id="expJson">Exportar JSON</button>
+      <button class="tb" id="impBtn">Importar JSON</button>
+      <button class="tb" id="reset">Resetar</button>
+      <input type="file" id="impFile" accept="application/json,.json">
+      <button class="tb" id="changeAuthor" title="Trocar seu nome">👤 <span id="authorLabel"></span></button>
+      <span class="saveState" id="saveState"></span>
+    </div>
   </div>
 
   <div id="view-backlog">
@@ -373,6 +379,7 @@ function noteTargetLabel(target){
   if(target.type==='item'){const it=getItem(target.id);return it?(it.text||'(item sem texto)').slice(0,60):(target.label||'(item removido)');}
   if(target.type==='section'){const s=getSection(target.id);return s?(s.title||'(seção sem título)'):(target.label||'(seção removida)');}
   if(target.type==='note'){const n=state.notes.find(x=>x.id===target.id);return n?`resposta a nota de ${n.author}`:(target.label||'(nota removida)');}
+  if(target.type==='sprint'){const sp=state.sprints.find(x=>x.id===target.id);return sp?sprintLabel(sp):(target.label||'(sprint removido)');}
   return target.label||'(destino)';
 }
 
@@ -599,13 +606,16 @@ function assignedItems(sprintId){
   return out;
 }
 function sprintStatusOptions(sel){return [['planned','Planejado'],['active','Ativo'],['done','Concluído']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
+function sprintNotes(sp){return state.notes.filter(n=>n.target&&n.target.type==='sprint'&&n.target.id===sp.id);}
 function sprintHTML(sp){
   const items=assignedItems(sp.id);
   const total=items.length,done=items.filter(i=>itemProgress(i)===100).length;
-  const pct=total?Math.round(done/total*100):0;
+  const avg=total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0;
   const expanded=expandedSprints.has(sp.id);
+  const notes=sprintNotes(sp);
   return `<div class="sprintCard ${expanded?'expanded':''}" data-spid="${sp.id}">
-    <div class="sprintHead" data-role="sprintToggle">
+    <div class="sprintHead">
+      <button class="sprintToggleBtn" data-role="sprintToggle" title="${expanded?'Recolher':'Expandir'}">${expanded?'▾':'▸'}</button>
       <span class="sprintNumber">Sprint ${sp.number||'?'}</span>
       <input class="sprintName" data-role="sprintName" value="${esc(sp.name)}" placeholder="título (opcional)">
       <select class="status" data-role="sprintStatus">${sprintStatusOptions(sp.status)}</select>
@@ -614,11 +624,18 @@ function sprintHTML(sp){
       <input class="sprintDate" type="date" data-role="sprintEnd" value="${esc(sp.end)}">
       <button class="itemDel" data-role="delSprint" title="Remover sprint">✕</button>
     </div>
-    <div class="sprintBar"><div class="sprintBarFill" style="width:${pct}%"></div></div>
-    <div class="sprintProgressText">${done}/${total} concluídos</div>
+    <div class="sprintBar"><div class="sprintBarFill" style="width:${avg}%"></div></div>
+    <div class="sprintProgressText">${done}/${total} concluídos · ${avg}%</div>
     <div class="sprintBody">
       <textarea class="secIntro" data-role="sprintGoal" rows="1" placeholder="objetivo do sprint…">${esc(sp.goal)}</textarea>
       <div class="items">${items.map(it=>itemHTML(it,{hideActions:true})).join('')||'<span class="noneTxt">— nenhum item vinculado —</span>'}</div>
+      <div class="sprintNotes">
+        <div class="noteList">${noteListHTML(notes)}</div>
+        <div class="noteAddRow">
+          <input class="noteInput" data-role="sprintNoteInput" data-sprint-id="${sp.id}" placeholder="adicionar nota sobre este sprint…">
+          <button class="noteAddBtn" data-role="addSprintNote" data-sprint-id="${sp.id}">+</button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
@@ -626,6 +643,15 @@ function renderSprints(){
   const sorted=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
   el('sprintsList').innerHTML=sorted.map(sprintHTML).join('')||'<div class="hint">Nenhum sprint criado ainda.</div>';
   document.querySelectorAll('#sprintsList .secIntro,#sprintsList .itemText').forEach(autosize);
+}
+function addNoteToSprint(spId,inp,root){
+  const v=(inp.value||'').trim();if(!v)return;
+  const sp=state.sprints.find(s=>s.id===spId);
+  state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,target:{type:'sprint',id:spId,label:sprintLabel(sp)}});
+  renderAll();save();
+  const scope=root||document;
+  const again=scope.querySelector(`.sprintCard[data-spid="${spId}"] [data-role="sprintNoteInput"]`);
+  if(again)again.focus();
 }
 
 /* ---------- pending items render ---------- */
@@ -783,27 +809,29 @@ function handleItemChange(e){
   }
   return false;
 }
-function addNoteFromItem(itemEl){
+function addNoteFromItem(itemEl,root){
   const it=getItem(itemEl.dataset.iid);if(!it)return;
   const inp=itemEl.querySelector('.noteInput');
   const v=(inp.value||'').trim();if(!v)return;
   state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,target:{type:'item',id:it.id,label:(it.text||'').slice(0,60)}});
   renderAll();save();
-  const again=document.querySelector(`[data-iid="${it.id}"]`);
+  const scope=root||document;
+  const again=scope.querySelector(`[data-iid="${it.id}"]`);
   if(again){again.classList.add('showNote');const i2=again.querySelector('.noteInput');if(i2)i2.focus();}
 }
 function handleItemClick(e){
   const r=e.target.dataset.role;
   const itemEl=e.target.closest('.item');if(!itemEl)return false;
   const it=getItem(itemEl.dataset.iid);if(!it)return false;
+  const root=e.currentTarget;
   if(r==='confirm'){it.confirm=!it.confirm;it.pendingResolved=it.confirm?false:true;renderAll();save();return true;}
   if(r==='itemToggle'){if(collapsedItems.has(it.id))collapsedItems.delete(it.id);else collapsedItems.add(it.id);renderAll();return true;}
   if(r==='noteToggle'){itemEl.classList.toggle('showNote');if(itemEl.classList.contains('showNote')){const inp=itemEl.querySelector('.noteInput');if(inp)inp.focus();}return true;}
-  if(r==='addNote'){addNoteFromItem(itemEl);return true;}
+  if(r==='addNote'){addNoteFromItem(itemEl,root);return true;}
   if(r==='setProgressType'){it.progressType=e.target.dataset.type;renderAll();save();return true;}
   if(r==='addSubtask'){
     it.subtasks.push({id:uid(),text:'',done:false});renderAll();save();
-    const row=document.querySelector(`[data-iid="${it.id}"] .subtasksBlock .subtaskRow:last-child .subtaskText`);
+    const row=root.querySelector(`[data-iid="${it.id}"] .subtasksBlock .subtaskRow:last-child .subtaskText`);
     if(row)row.focus();
     return true;
   }
@@ -820,12 +848,13 @@ function handleItemClick(e){
   return false;
 }
 function handleItemKeydown(e){
-  if(e.target.dataset.role==='noteInput'&&e.key==='Enter'){e.preventDefault();addNoteFromItem(e.target.closest('.item'));}
+  if(e.target.dataset.role==='noteInput'&&e.key==='Enter'){e.preventDefault();addNoteFromItem(e.target.closest('.item'),e.currentTarget);}
 }
 
 /* ---------- shared note handlers (used anywhere notes render: items, sprints, sheet doc) ---------- */
-function startEditNote(id){
-  const span=document.querySelector(`[data-role="noteTextDisplay"][data-id="${id}"]`);
+function startEditNote(id,root){
+  const scope=root||document;
+  const span=scope.querySelector(`[data-role="noteTextDisplay"][data-id="${id}"]`);
   if(!span)return;
   const n=state.notes.find(x=>x.id===id);if(!n)return;
   const input=document.createElement('input');
@@ -841,7 +870,8 @@ function startEditNote(id){
 }
 function handleNoteClick(e){
   const r=e.target.dataset.role;
-  if(r==='editNote'){startEditNote(e.target.dataset.id);return true;}
+  const root=e.currentTarget;
+  if(r==='editNote'){startEditNote(e.target.dataset.id,root);return true;}
   if(r==='delNote'){
     const id=e.target.dataset.id;
     if(confirm('Remover esta nota?')){
@@ -853,13 +883,14 @@ function handleNoteClick(e){
   }
   if(r==='replyNote'){
     replyingToNoteId=e.target.dataset.id;
+    const pid=replyingToNoteId;
     renderAll();
-    setTimeout(()=>{const inp=document.querySelector(`[data-role="noteReplyInput"][data-parent-id="${replyingToNoteId}"]`);if(inp)inp.focus();},0);
+    setTimeout(()=>{const inp=root.querySelector(`[data-role="noteReplyInput"][data-parent-id="${pid}"]`);if(inp)inp.focus();},0);
     return true;
   }
   if(r==='submitReply'){
     const parentId=e.target.dataset.parentId;
-    const inp=document.querySelector(`[data-role="noteReplyInput"][data-parent-id="${parentId}"]`);
+    const inp=root.querySelector(`[data-role="noteReplyInput"][data-parent-id="${parentId}"]`);
     const v=(inp&&inp.value||'').trim();
     if(v){
       const parent=state.notes.find(n=>n.id===parentId);
@@ -876,7 +907,8 @@ function handleNoteClick(e){
 function handleNoteKeydown(e){
   if(e.target.dataset.role==='noteReplyInput'&&e.key==='Enter'){
     e.preventDefault();
-    const btn=document.querySelector(`[data-role="submitReply"][data-parent-id="${e.target.dataset.parentId}"]`);
+    const root=e.currentTarget;
+    const btn=root.querySelector(`[data-role="submitReply"][data-parent-id="${e.target.dataset.parentId}"]`);
     if(btn)btn.click();
   }
 }
@@ -938,9 +970,21 @@ SP.addEventListener('click',e=>{
       state.sections.forEach(s=>s.items.forEach(it=>{if(it.sprintId===sid)it.sprintId=null;}));
       state.sprints=state.sprints.filter(s=>s.id!==sid);renderAll();save();
     }}
+  else if(r==='addSprintNote'){
+    const spId=e.target.dataset.sprintId;
+    const inp=card.querySelector('[data-role="sprintNoteInput"]');
+    if(inp)addNoteToSprint(spId,inp,e.currentTarget);
+  }
 });
 SP.addEventListener('keydown',handleItemKeydown);
 SP.addEventListener('keydown',handleNoteKeydown);
+SP.addEventListener('keydown',e=>{
+  if(e.target.dataset.role==='sprintNoteInput'&&e.key==='Enter'){
+    e.preventDefault();
+    const card=e.target.closest('.sprintCard');if(!card)return;
+    addNoteToSprint(card.dataset.spid,e.target,e.currentTarget);
+  }
+});
 
 /* ---------- pending items events ---------- */
 const PD=el('pendingList');
@@ -1121,6 +1165,10 @@ function normalize(o){
 function boot(){
   el('docTitle').value=state.docTitle||'';el('docSub').value=state.docSub||'';
   expandedSprints=new Set(state.sprints.filter(s=>s.status==='active').map(s=>s.id));
+  if(expandedSprints.size===0&&state.sprints.length>0){
+    const earliest=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''))[0];
+    expandedSprints.add(earliest.id);
+  }
   setView(state.activeView||'sprints');
   renderAll();autosize(el('footNote'));
   refreshAuthorLabel();
