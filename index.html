@@ -70,7 +70,7 @@
   .itemToggle{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 4px;flex:none;padding-top:6px}
   .itemToggle:hover{color:var(--accent-ink)}
   .itemProgressLabel{display:none;flex:none;font-size:12px;font-weight:700;color:var(--muted);padding-top:6px}
-  .item.collapsed .itemProgress,.item.collapsed .subtasksBlock,.item.collapsed .itemSprintRow,.item.collapsed .noteToggle,.item.collapsed .typePicker,.item.collapsed .itemDel,.item.collapsed .blockersPanel{display:none}
+  .item.collapsed .itemProgress,.item.collapsed .subtasksBlock,.item.collapsed .itemSprintRow,.item.collapsed .itemBlockersRow,.item.collapsed .noteToggle,.item.collapsed .typePicker,.item.collapsed .itemDel,.item.collapsed .blockersPanel{display:none}
   .item.collapsed .itemProgressLabel{display:block}
   .item.collapsed .itemText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:1.7em!important;resize:none}
   input.done{width:17px;height:17px;flex:none;margin-top:5px;cursor:pointer;accent-color:var(--E)}
@@ -198,6 +198,10 @@
 
   /* sprint link on backlog items */
   .itemSprintRow{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
+  .itemBlockersRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .blockerChip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700;cursor:pointer;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .blockerChip.open{background:var(--bangbg);color:var(--bang);border-color:#eec3bc}
+  .blockerChip.resolved{background:var(--Ebg);color:var(--E);border-color:#bfe3d1}
   .sprintPick{font-size:12px;border:1px dashed var(--line);border-radius:7px;padding:4px 6px;color:var(--muted);background:var(--panel);cursor:pointer;max-width:170px}
   .sprintBadge{border:1px solid var(--line);background:#eef1f5;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:700;color:var(--accent-ink);cursor:pointer}
   .sprintBadge:hover{background:#e4eaf1}
@@ -670,6 +674,11 @@ function blockersPanelHTML(it){
   }
   return `<div class="blockersPanel" data-role="blockersPanel">${linkedRows}${addRow}</div>`;
 }
+function itemBlockersRowHTML(it){
+  const blockers=itemBlockers(it);
+  if(!blockers.length)return '';
+  return `<div class="itemBlockersRow">${blockers.map(p=>`<button class="blockerChip ${p.status==='resolved'?'resolved':'open'}" data-role="gotoPendingItem" data-pending-id="${p.id}" title="${esc(p.title||'(sem título)')}">${esc((p.title||'(sem título)').slice(0,30))}</button>`).join('')}</div>`;
+}
 function itemHTML(it,opts){
   opts=opts||{};
   const locked=!it.progressType;
@@ -690,6 +699,7 @@ function itemHTML(it,opts){
       ${locked?typePickerHTML():''}
       ${subtasksHTML(it)}
       <div class="itemSprintRow">${sprintPickHTML(it,locked)}${sprintBadgeHTML(it)}</div>
+      ${itemBlockersRowHTML(it)}
       ${blockersPanelHTML(it)}
       <button class="noteToggle" data-role="noteToggle" ${locked?'disabled':''}>${hasNotes?'<span class="dot">●</span> notas ('+notes.length+')':'+ nota'}</button>
       <div class="note" data-role="noteBlock">
@@ -1366,6 +1376,12 @@ function handleItemClick(e){
     const sid=e.target.dataset.sprintId;
     setView('sprints');expandedSprints.add(sid);renderSprints();
     setTimeout(()=>{const card=document.querySelector(`.sprintCard[data-spid="${sid}"]`);if(card)card.scrollIntoView({behavior:'smooth',block:'center'});},0);
+    return true;
+  }
+  if(r==='gotoPendingItem'){
+    const pid=e.target.dataset.pendingId;
+    setView('pending');renderPending();
+    setTimeout(()=>{const card=document.querySelector(`.pendingCard[data-id="${pid}"]`);if(card)card.scrollIntoView({behavior:'smooth',block:'center'});},0);
     return true;
   }
   return false;
