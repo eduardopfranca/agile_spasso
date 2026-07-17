@@ -69,7 +69,7 @@
   .itemToggle{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 4px;flex:none;padding-top:6px}
   .itemToggle:hover{color:var(--accent-ink)}
   .itemProgressLabel{display:none;flex:none;font-size:12px;font-weight:700;color:var(--muted);padding-top:6px}
-  .item.collapsed .itemProgress,.item.collapsed .subtasksBlock,.item.collapsed .itemSprintRow,.item.collapsed .noteToggle,.item.collapsed .typePicker,.item.collapsed .itemDel{display:none}
+  .item.collapsed .itemProgress,.item.collapsed .subtasksBlock,.item.collapsed .itemSprintRow,.item.collapsed .noteToggle,.item.collapsed .typePicker,.item.collapsed .itemDel,.item.collapsed .blockersPanel{display:none}
   .item.collapsed .itemProgressLabel{display:block}
   .item.collapsed .itemText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:1.7em!important;resize:none}
   input.done{width:17px;height:17px;flex:none;margin-top:5px;cursor:pointer;accent-color:var(--E)}
@@ -78,6 +78,18 @@
   select.status.N{background:var(--Nbg);color:var(--N)}select.status.P{background:var(--Pbg);color:var(--P)}
   .bang{flex:none;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:#cfc8be;font-weight:800;cursor:pointer;padding:5px 9px;font-size:13px;line-height:1}
   .bang.on{background:var(--bangbg);color:var(--bang);border-color:#eec3bc}
+  .bang.resolved{background:var(--Ebg);color:var(--E);font-weight:600;border-color:#bfe3d1}
+  .blockersPanel{display:none;margin-top:4px;width:100%}
+  .item.showBlockers .blockersPanel{display:block}
+  .blockerRow{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--line)}
+  .blockerRow:last-of-type{border-bottom:none}
+  .blockerTitle{flex:1;color:var(--ink)}
+  .blockerTitle.resolved{color:var(--muted);text-decoration:line-through}
+  .blockerStatus{font-size:11px;color:var(--muted);font-weight:600}
+  .blockerRemove{border:none;background:transparent;color:#cfc8be;cursor:pointer;font-size:12px;padding:2px 4px;flex:none}
+  .blockerRemove:hover{color:var(--bang)}
+  .blockerAddRow{margin-top:4px}
+  .blockerAddRow select{width:100%;font-size:12px;border:1px dashed var(--line);border-radius:7px;padding:5px 6px;color:var(--muted);background:var(--panel);cursor:pointer}
   .itemMain{flex:1;min-width:0}
   .itemText{width:100%;border:none;background:transparent;resize:none;padding:5px 4px;border-radius:6px;font-size:14px;line-height:1.5;overflow:hidden;color:var(--ink)}
   .itemText:hover{background:#f4f1ec}.itemText:focus{outline:2px solid var(--accent);background:#fff}
@@ -112,6 +124,7 @@
   body:not([data-view="backlog"]) #addSection{display:none}
   body:not([data-view="backlog"]) #filterBang{display:none}
   body:not([data-view="sprints"]) #addSprint{display:none}
+  body:not([data-view="sprints"]) #renumberSprints{display:none}
   body:not([data-view="marcos"]) #addMarco{display:none}
   body:not([data-view="licoes"]) #addMeeting{display:none}
   body:not([data-view="pending"]) #addPendingItem{display:none}
@@ -136,6 +149,13 @@
   .subtaskDel:hover{color:var(--bang);background:var(--bangbg)}
   .addSubtask{margin-top:2px;background:none;border:1px dashed var(--line);color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;align-self:flex-start}
   .addSubtask:hover{border-color:var(--accent);color:var(--accent-ink)}
+  .subtaskRow .handle{font-size:13px;padding:0;flex:none}
+
+  /* estimated hours */
+  .itemHours{display:flex;align-items:center;gap:2px;flex:none}
+  .hoursInput{width:40px;border:1px solid var(--line);border-radius:7px;padding:5px 4px;font-size:12px;text-align:center;color:var(--ink);background:var(--panel)}
+  .hoursInput:focus{outline:2px solid var(--accent);background:#fff}
+  .hoursSuffix{font-size:11px;color:var(--muted);font-weight:700}
 
   /* sheet mapping document */
   .docToolbar{margin:4px 0 10px}
@@ -182,7 +202,9 @@
   .sprintToggleBtn{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 4px;flex:none}
   .sprintToggleBtn:hover{color:var(--accent-ink)}
   .sprintNotes{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
-  .sprintNumber{font-weight:700;font-size:15px;color:var(--accent-ink);flex:none;padding:3px 4px}
+  .sprintNumber{font-weight:700;font-size:15px;color:var(--accent-ink);flex:none;width:52px;padding:3px 4px;border:none;background:transparent;border-radius:6px;text-align:center}
+  .sprintNumber:hover{background:#f4f1ec}
+  .sprintNumber:focus{outline:2px solid var(--accent);background:#fff}
   .sprintName{flex:1;min-width:120px;font-weight:700;font-size:15px;border:none;background:transparent;padding:3px 4px;border-radius:6px;color:var(--ink)}
   .sprintName:hover{background:#f4f1ec}.sprintName:focus{outline:2px solid var(--accent);background:#fff}
   .sprintDate{border:1px solid var(--line);border-radius:7px;padding:4px 6px;font-size:12.5px;color:#4a463f;background:var(--panel)}
@@ -200,11 +222,17 @@
   .pendingOriginBadge{font-size:11px;font-weight:700;color:var(--muted);background:#f0ede8;border:none;border-radius:999px;padding:2px 8px;cursor:default}
   .pendingOriginBadge.clickable{cursor:pointer}
   .pendingOriginBadge.clickable:hover{color:var(--accent-ink);background:#eef4f1}
-  .pendingTitle{font-weight:700;font-size:14px;color:var(--ink);margin:2px 0}
   .pendingTitleInput{width:100%;border:none;background:transparent;font-weight:700;font-size:14px;padding:3px 4px;border-radius:6px;color:var(--ink)}
   .pendingTitleInput:hover{background:#f4f1ec}.pendingTitleInput:focus{outline:2px solid var(--accent);background:#fff}
   .pendingAuthor{font-size:12px;color:var(--muted);margin-top:2px}
   .pendingActions{display:flex;gap:6px;margin-top:6px;align-items:center}
+  .pendingResponsibleRow{margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pendingResponsibleInput{flex:1;min-width:160px;border:1px dashed var(--line);border-radius:7px;padding:5px 8px;font-size:13px;color:var(--ink);background:var(--panel)}
+  .pendingResponsibleInput:focus{outline:2px solid var(--accent);background:#fff}
+  .pendingResponsibleRow.warn .pendingResponsibleInput{border-color:var(--bang);background:var(--bangbg)}
+  .pendingWarnLabel{font-size:11px;font-weight:700;color:var(--bang)}
+  .pendingBlocks{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .pendingBlocksLabel{font-size:11.5px;color:var(--muted);font-weight:600}
 
   /* retrospectives */
   .retroCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
@@ -252,6 +280,7 @@
     <div class="toolbar">
       <button class="tb primary" id="addSection">+ Seção</button>
       <button class="tb primary" id="addSprint">+ Sprint</button>
+      <button class="tb" id="renumberSprints">Renumerar por data</button>
       <button class="tb primary" id="addMarco">+ Marco</button>
       <button class="tb primary" id="addMeeting">+ Reunião</button>
       <button class="tb primary" id="addPendingItem">+ Novo item pendente</button>
@@ -314,7 +343,7 @@
   </div>
 
   <div id="view-pending">
-    <div class="hint">Itens pendentes vindos do Backlog (❗) e itens criados diretamente aqui, do mais recente para o mais antigo.</div>
+    <div class="hint">Itens pendentes criados aqui. Vincule um item do Backlog a um destes pelo botão <b>!</b> no item, na aba Backlog ou Sprints.</div>
     <div id="pendingList"></div>
   </div>
 
@@ -344,7 +373,6 @@ const API='https://agile-spasso.mesaagro.workers.dev';
 const RETRO_OWNER='eduardopfranca';
 const RETRO_REPO='agile_spasso';
 const uid=()=>'x'+Math.random().toString(36).slice(2,9)+Date.now().toString(36);
-function extractIdTs(id){const ms=parseInt((id||'').slice(8),36);return isNaN(ms)?0:ms;}
 
 const VIEWS=[
   {id:'sprints',label:'Sprints'},
@@ -371,7 +399,7 @@ const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&g
 const el=id=>document.getElementById(id);
 
 /* ---------- default data ---------- */
-function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],confirm:!!a[1],progressType:'check',done:false,subtasks:[],percent:0,text:a[2],sprintId:null,pendingResolved:false,urgency:'media'}));}
+function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],progressType:'check',done:false,subtasks:[],percent:0,text:a[2],sprintId:null,blockedBy:[],estimatedHours:null}));}
 const DEFAULT_STATE={
   docTitle:'Agile Mesa Spasso',docSub:'Spasso',activeView:'sprints',
   footNote:'A sequência das seções reflete a dependência lógica entre as frentes, não a ordem de execução. No planejamento de sprints, frentes independentes — como Precificação e Fundação — podem avançar em paralelo.',
@@ -438,6 +466,13 @@ function itemProgress(it){
   return 0;
 }
 function itemNotes(it){return state.notes.filter(n=>n.target&&n.target.type==='item'&&n.target.id===it.id);}
+function itemBlockers(it){return (it.blockedBy||[]).map(id=>state.pendingItems.find(p=>p.id===id)).filter(Boolean);}
+function itemBlockState(it){
+  const blockers=itemBlockers(it);
+  if(!blockers.length)return 'none';
+  if(blockers.some(p=>p.status==='open'))return 'open';
+  return 'resolved';
+}
 function docNotes(){return state.notes.filter(n=>n.target&&n.target.type==='doc'&&n.target.id==='sheet-mapping-doc');}
 function noteTargetLabel(target){
   if(!target)return '(destino)';
@@ -559,6 +594,7 @@ function progressControlHTML(it,locked){
 function subtasksHTML(it){
   if(it.progressType!=='subtasks')return '';
   const rows=(it.subtasks||[]).map(st=>`<div class="subtaskRow" data-stid="${st.id}">
+    <span class="handle subtask-handle">⋮⋮</span>
     <input type="checkbox" class="subtaskDone" data-role="subtaskDone" ${st.done?'checked':''}>
     <input class="subtaskText" data-role="subtaskText" value="${esc(st.text)}" placeholder="subtarefa…">
     <button class="subtaskDel" data-role="delSubtask" title="Remover subtarefa">✕</button>
@@ -568,10 +604,38 @@ function subtasksHTML(it){
     <button class="addSubtask" data-role="addSubtask">+ subtarefa</button>
   </div>`;
 }
+function hoursInputHTML(it,locked){
+  return `<div class="itemHours" title="Tempo estimado (horas)">
+    <input type="number" class="hoursInput" data-role="estimatedHours" min="0" step="0.5" value="${it.estimatedHours!=null?it.estimatedHours:''}" placeholder="0" ${locked?'disabled':''}>
+    <span class="hoursSuffix">h</span>
+  </div>`;
+}
 function compactProgressLabel(it){
   if(it.progressType==='percent')return `${itemProgress(it)}%`;
   if(it.progressType==='subtasks'){const total=it.subtasks.length,done=it.subtasks.filter(s=>s.done).length;return `${done}/${total}`;}
   return '';
+}
+function blockersPanelHTML(it){
+  const blockedBy=it.blockedBy||[];
+  const linked=itemBlockers(it);
+  const available=state.pendingItems.filter(p=>!blockedBy.includes(p.id));
+  const linkedRows=linked.map(p=>`<div class="blockerRow">
+    <span class="blockerTitle ${p.status==='resolved'?'resolved':''}">${esc(p.title||'(sem título)')}</span>
+    <span class="blockerStatus">${p.status==='resolved'?'resolvido':'aberto'}</span>
+    <button class="blockerRemove" data-role="unlinkBlocker" data-pending-id="${p.id}" title="Remover vínculo">✕</button>
+  </div>`).join('');
+  let addRow;
+  if(!state.pendingItems.length){
+    addRow=`<div class="hint">Nenhum item pendente cadastrado ainda. Crie um na aba <b>Itens Pendentes</b>.</div>`;
+  }else if(available.length){
+    addRow=`<div class="blockerAddRow"><select data-role="linkBlockerPick">
+      <option value="">— vincular item pendente —</option>
+      ${available.map(p=>`<option value="${p.id}">${esc(p.title||'(sem título)')} (${p.status==='resolved'?'resolvido':'aberto'})</option>`).join('')}
+    </select></div>`;
+  }else{
+    addRow=`<div class="hint">Todos os itens pendentes já estão vinculados.</div>`;
+  }
+  return `<div class="blockersPanel" data-role="blockersPanel">${linkedRows}${addRow}</div>`;
 }
 function itemHTML(it,opts){
   opts=opts||{};
@@ -580,17 +644,20 @@ function itemHTML(it,opts){
   const hasNotes=notes.length>0;
   const complete=itemProgress(it)===100;
   const collapsed=collapsedItems.has(it.id);
-  return `<div class="item ${hasNotes?'showNote':''} ${it.confirm?'hasBang':''} ${complete?'isDone':''} ${collapsed?'collapsed':''}" data-iid="${it.id}">
+  const blockState=itemBlockState(it);
+  return `<div class="item ${hasNotes?'showNote':''} ${blockState==='open'?'hasBang':''} ${complete?'isDone':''} ${collapsed?'collapsed':''}" data-iid="${it.id}">
     <button class="itemToggle" data-role="itemToggle" title="${collapsed?'Expandir':'Recolher'}">${collapsed?'▸':'▾'}</button>
     <div class="itemProgress">${progressControlHTML(it,locked)}</div>
     <span class="itemProgressLabel">${compactProgressLabel(it)}</span>
     <select class="status ${it.status||''}" data-role="status" ${locked?'disabled':''}>${statusOptions(it.status||'')}</select>
-    <button class="bang ${it.confirm?'on':''}" data-role="confirm" title="Pendência externa" ${locked?'disabled':''}>!</button>
+    <button class="bang ${blockState==='open'?'on':''} ${blockState==='resolved'?'resolved':''}" data-role="bangToggle" title="Pendência externa" ${locked?'disabled':''}>!</button>
+    ${hoursInputHTML(it,locked)}
     <div class="itemMain">
       <textarea class="itemText" data-role="text" rows="1">${esc(it.text)}</textarea>
       ${locked?typePickerHTML():''}
       ${subtasksHTML(it)}
       <div class="itemSprintRow">${sprintPickHTML(it,locked)}${sprintBadgeHTML(it)}</div>
+      ${blockersPanelHTML(it)}
       <button class="noteToggle" data-role="noteToggle" ${locked?'disabled':''}>${hasNotes?'<span class="dot">●</span> notas ('+notes.length+')':'+ nota'}</button>
       <div class="note" data-role="noteBlock">
         <div class="noteList">${noteListHTML(notes)}</div>
@@ -627,14 +694,14 @@ function sectionHTML(s){
 function renderBacklog(){
   el('sections').innerHTML=state.sections.map(sectionHTML).join('');
   el('footNote').value=state.footNote||'';
-  autosizeAll();initSortables();updateDiagram();updateBangCount();applyFilter();
+  autosizeAll();initSortables();initSubtaskSortables();updateDiagram();updateBangCount();applyFilter();
 }
 function updateDiagram(){
   const names=state.sections.filter(s=>s.title&&s.title.toLowerCase()!=='itens diferidos').map(s=>esc(s.title));
   el('diagram').innerHTML=names.length?names.join('<span class="arrow">→</span>'):'<span style="color:var(--muted)">Adicione seções.</span>';
 }
 function updateBangCount(){
-  let n=0;state.sections.forEach(s=>s.items.forEach(i=>{if(i.confirm)n++;}));
+  let n=0;state.sections.forEach(s=>s.items.forEach(i=>{if(itemBlockState(i)==='open')n++;}));
   const on=document.body.classList.contains('filtering');
   el('filterBang').textContent=on?`Mostrar tudo (${n})`:`❗ Só pendências externas (${n})`;
 }
@@ -672,18 +739,51 @@ function assignedItems(sprintId){
   const out=[];state.sections.forEach(s=>s.items.forEach(it=>{if(it.sprintId===sprintId)out.push(it);}));
   return out;
 }
+function nextLetterSuffix(baseNumber,existingNumbers){
+  const m=/^(\d+)([a-z]*)$/i.exec(baseNumber||'');
+  if(!m)return (baseNumber||'')+'b';
+  const root=m[1];
+  const used=new Set();
+  existingNumbers.forEach(n=>{
+    const mm=/^(\d+)([a-z]*)$/i.exec(n||'');
+    if(mm&&mm[1]===root)used.add(mm[2].toLowerCase());
+  });
+  for(let c=98;c<=122;c++){
+    const letter=String.fromCharCode(c);
+    if(!used.has(letter))return root+letter;
+  }
+  return root+'z2';
+}
+function computeSprintNumber(newStart,excludeId){
+  const existing=state.sprints.filter(s=>s.id!==excludeId);
+  if(!existing.length)return '1';
+  const sorted=[...existing].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  const maxInt=Math.max(0,...sorted.map(s=>parseInt(s.number,10)||0));
+  let preceding=null;
+  for(const s of sorted){
+    if((s.start||'')<=(newStart||''))preceding=s;
+    else break;
+  }
+  if(!preceding)return String(maxInt+1);
+  if(preceding===sorted[sorted.length-1])return String(maxInt+1);
+  const allNumbers=sorted.map(s=>s.number).filter(Boolean);
+  return nextLetterSuffix(preceding.number,allNumbers);
+}
 function sprintStatusOptions(sel){return [['planned','Planejado'],['active','Ativo'],['done','Concluído']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
 function sprintNotes(sp){return state.notes.filter(n=>n.target&&n.target.type==='sprint'&&n.target.id===sp.id);}
 function sprintHTML(sp){
   const items=assignedItems(sp.id);
   const total=items.length,done=items.filter(i=>itemProgress(i)===100).length;
   const avg=total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0;
+  const hasHours=items.some(it=>it.estimatedHours!=null&&it.estimatedHours>0);
+  const totalHours=Math.round(items.reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
+  const doneHours=Math.round(items.filter(it=>itemProgress(it)===100).reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
   const expanded=expandedSprints.has(sp.id);
   const notes=sprintNotes(sp);
   return `<div class="sprintCard ${expanded?'expanded':''}" data-spid="${sp.id}">
     <div class="sprintHead">
       <button class="sprintToggleBtn" data-role="sprintToggle" title="${expanded?'Recolher':'Expandir'}">${expanded?'▾':'▸'}</button>
-      <span class="sprintNumber">Sprint ${sp.number||'?'}</span>
+      <input class="sprintNumber" data-role="sprintNumber" value="${esc(sp.number||'')}" placeholder="nº" title="Número do sprint">
       <input class="sprintName" data-role="sprintName" value="${esc(sp.name)}" placeholder="título (opcional)">
       <select class="status" data-role="sprintStatus">${sprintStatusOptions(sp.status)}</select>
       <input class="sprintDate" type="date" data-role="sprintStart" value="${esc(sp.start)}">
@@ -692,7 +792,7 @@ function sprintHTML(sp){
       <button class="itemDel" data-role="delSprint" title="Remover sprint">✕</button>
     </div>
     <div class="sprintBar"><div class="sprintBarFill" style="width:${avg}%"></div></div>
-    <div class="sprintProgressText">${done}/${total} concluídos · ${avg}%</div>
+    <div class="sprintProgressText">${done}/${total} concluídos · ${avg}%${hasHours?` · ${totalHours}h estimadas (${doneHours}h concluídas)`:''}</div>
     <div class="sprintBody">
       <textarea class="secIntro" data-role="sprintGoal" rows="1" placeholder="objetivo do sprint…">${esc(sp.goal)}</textarea>
       <div class="items">${items.map(it=>itemHTML(it,{hideActions:true})).join('')||'<span class="noneTxt">— nenhum item vinculado —</span>'}</div>
@@ -710,6 +810,7 @@ function renderSprints(){
   const sorted=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
   el('sprintsList').innerHTML=sorted.map(sprintHTML).join('')||'<div class="hint">Nenhum sprint criado ainda.</div>';
   document.querySelectorAll('#sprintsList .secIntro,#sprintsList .itemText').forEach(autosize);
+  initSubtaskSortables();
 }
 function addNoteToSprint(spId,inp,root){
   const v=(inp.value||'').trim();if(!v)return;
@@ -732,6 +833,7 @@ function milestoneHTML(m){
   const notes=milestoneNotes(m);
   return `<div class="milestoneCard ${m.completed?'completed':''}" data-mid="${m.id}">
     <div class="milestoneHead">
+      <span class="handle milestone-handle">⋮⋮</span>
       <input type="checkbox" class="done" data-role="milestoneCompleted" ${m.completed?'checked':''} title="Concluído">
       <input class="milestoneTitle" data-role="milestoneTitle" value="${esc(m.title)}" placeholder="título do marco">
       <button class="itemDel" data-role="delMilestone" title="Remover marco">✕</button>
@@ -747,9 +849,22 @@ function milestoneHTML(m){
     </div>
   </div>`;
 }
+function rebuildMilestonesFromDOM(){
+  const map={};state.milestones.forEach(m=>map[m.id]=m);
+  state.milestones=[...document.querySelectorAll('#marcosList > .milestoneCard')].map(e=>map[e.dataset.mid]).filter(Boolean);
+  save();
+}
+function initMilestoneSortable(){
+  sortables.filter(s=>s._mc).forEach(s=>{try{s.destroy()}catch(e){}});
+  sortables=sortables.filter(s=>!s._mc);
+  if(!window.Sortable)return;
+  const s=Sortable.create(el('marcosList'),{handle:'.milestone-handle',draggable:'.milestoneCard',animation:150,onEnd:rebuildMilestonesFromDOM});
+  s._mc=1;sortables.push(s);
+}
 function renderMarcos(){
   el('marcosList').innerHTML=state.milestones.map(milestoneHTML).join('')||'<div class="hint">Nenhum marco cadastrado.</div>';
   document.querySelectorAll('#marcosList .secIntro').forEach(autosize);
+  initMilestoneSortable();
 }
 function addNoteToMilestone(mid,inp,root){
   const v=(inp.value||'').trim();if(!v)return;
@@ -858,42 +973,39 @@ function handleMeetingEntryClick(e){
 }
 
 /* ---------- pending items render ---------- */
-function mostRecentTs(it){return extractIdTs(it.id);}
 const URGENCY_RANK={alta:3,media:2,baixa:1};
 function pendingUrgencySelectHTML(p){
-  return `<select class="urgency urgency-${p.urgency}" data-role="pendingUrgency" data-kind="${p.kind}" data-id="${p.id}" title="Urgência">${urgencyOptions(p.urgency)}</select>`;
+  return `<select class="urgency urgency-${p.urgency}" data-role="pendingUrgency" data-id="${p.id}" title="Urgência">${urgencyOptions(p.urgency)}</select>`;
+}
+function pendingBlockedItems(p){
+  const out=[];
+  state.sections.forEach(sec=>sec.items.forEach(it=>{if((it.blockedBy||[]).includes(p.id))out.push(it);}));
+  return out;
 }
 function buildPendingList(){
-  const derived=[];
-  state.sections.forEach(sec=>sec.items.forEach(it=>{
-    if(it.confirm||it.pendingResolved){
-      derived.push({kind:'backlog',id:it.id,sectionTitle:sec.title,title:it.text||'(sem texto)',
-        resolved:!!it.pendingResolved,urgency:it.urgency||'media',sortKey:mostRecentTs(it)});
-    }
-  }));
-  const standalone=state.pendingItems.map(p=>({kind:'standalone',id:p.id,title:p.title,description:p.description,
-    author:p.author,resolved:p.status==='resolved',urgency:p.urgency||'media',sortKey:new Date(p.createdAt).getTime()||0}));
-  return [...derived,...standalone].sort((a,b)=>{
+  return [...state.pendingItems].sort((a,b)=>{
     const ur=(URGENCY_RANK[b.urgency]||0)-(URGENCY_RANK[a.urgency]||0);
     if(ur!==0)return ur;
-    return b.sortKey-a.sortKey;
+    return (new Date(b.createdAt).getTime()||0)-(new Date(a.createdAt).getTime()||0);
   });
 }
 function pendingHTML(p){
-  const originHTML=p.kind==='backlog'
-    ?`<button class="pendingOriginBadge clickable" data-role="gotoBacklog" data-node-id="${p.id}">Backlog · ${esc(p.sectionTitle)}</button>`
-    :`<span class="pendingOriginBadge">Adicionado aqui</span>`;
-  const body=p.kind==='backlog'
-    ?`<div class="pendingTitle">${esc(p.title)}</div>`
-    :`<input class="pendingTitleInput" data-role="pendingTitle" data-id="${p.id}" value="${esc(p.title)}">
-      <textarea class="secIntro" data-role="pendingDescription" data-id="${p.id}" rows="1" placeholder="descrição…">${esc(p.description||'')}</textarea>
-      <div class="pendingAuthor">por ${esc(p.author||'')}</div>`;
-  return `<div class="pendingCard ${p.resolved?'resolved':''}" data-kind="${p.kind}" data-id="${p.id}">
-    <div class="pendingHead">${originHTML}${pendingUrgencySelectHTML(p)}</div>
-    ${body}
+  const resolved=p.status==='resolved';
+  const noResponsible=!p.responsible||!p.responsible.trim();
+  const blocked=pendingBlockedItems(p);
+  return `<div class="pendingCard ${resolved?'resolved':''}" data-id="${p.id}">
+    <div class="pendingHead">${pendingUrgencySelectHTML(p)}</div>
+    <input class="pendingTitleInput" data-role="pendingTitle" data-id="${p.id}" value="${esc(p.title)}">
+    <textarea class="secIntro" data-role="pendingDescription" data-id="${p.id}" rows="1" placeholder="descrição…">${esc(p.description||'')}</textarea>
+    <div class="pendingResponsibleRow ${noResponsible?'warn':''}">
+      <input class="pendingResponsibleInput" data-role="pendingResponsible" data-id="${p.id}" value="${esc(p.responsible||'')}" placeholder="responsável (pessoa, time, empresa, terceiro…)">
+      ${noResponsible?'<span class="pendingWarnLabel">defina um responsável</span>':''}
+    </div>
+    <div class="pendingAuthor">por ${esc(p.author||'')}</div>
+    ${blocked.length?`<div class="pendingBlocks"><span class="pendingBlocksLabel">Bloqueia:</span>${blocked.map(it=>`<button class="pendingOriginBadge clickable" data-role="gotoBacklog" data-node-id="${it.id}">${esc((it.text||'(sem texto)').slice(0,40))}</button>`).join('')}</div>`:''}
     <div class="pendingActions">
-      <button class="tb" data-role="togglePendingResolved" data-kind="${p.kind}" data-id="${p.id}">${p.resolved?'Reabrir':'Resolver'}</button>
-      ${p.kind==='standalone'?`<button class="itemDel" data-role="delPendingStandalone" data-id="${p.id}" title="Remover">✕</button>`:''}
+      <button class="tb" data-role="togglePendingResolved" data-id="${p.id}">${resolved?'Reabrir':'Resolver'}</button>
+      <button class="itemDel" data-role="delPendingItem" data-id="${p.id}" title="Remover">✕</button>
     </div>
   </div>`;
 }
@@ -901,7 +1013,7 @@ function renderPending(){
   const showAll=document.body.classList.contains('pendingShowAll');
   const urgencyFilter=el('filterUrgency').value;
   let list=buildPendingList();
-  if(!showAll)list=list.filter(p=>!p.resolved);
+  if(!showAll)list=list.filter(p=>p.status!=='resolved');
   if(urgencyFilter)list=list.filter(p=>p.urgency===urgencyFilter);
   el('pendingList').innerHTML=list.length?list.map(pendingHTML).join(''):'<div class="hint">Nenhum item pendente.</div>';
   document.querySelectorAll('#pendingList .secIntro').forEach(autosize);
@@ -1041,6 +1153,22 @@ function initSortables(){
   const a=Sortable.create(el('sections'),{handle:'.sec-handle',draggable:'.section',animation:150,onEnd:rebuildBacklogFromDOM});a._bl=1;sortables.push(a);
   document.querySelectorAll('.items').forEach(c=>{const s=Sortable.create(c,{handle:'.item-handle',group:'items',draggable:'.item',animation:150,onEnd:rebuildBacklogFromDOM});s._bl=1;sortables.push(s);});
 }
+function rebuildSubtasksFromDOM(blockEl){
+  const itemEl=blockEl.closest('.item');if(!itemEl)return;
+  const it=getItem(itemEl.dataset.iid);if(!it)return;
+  const map={};it.subtasks.forEach(st=>map[st.id]=st);
+  it.subtasks=[...blockEl.querySelectorAll('.subtaskRow')].map(r=>map[r.dataset.stid]).filter(Boolean);
+  save();
+}
+function initSubtaskSortables(){
+  sortables.filter(s=>s._st).forEach(s=>{try{s.destroy()}catch(e){}});
+  sortables=sortables.filter(s=>!s._st);
+  if(!window.Sortable)return;
+  document.querySelectorAll('.subtasksBlock').forEach(block=>{
+    const s=Sortable.create(block,{handle:'.subtask-handle',draggable:'.subtaskRow',animation:150,onEnd:()=>rebuildSubtasksFromDOM(block)});
+    s._st=1;sortables.push(s);
+  });
+}
 
 /* ---------- shared item-level handlers (used by Backlog and Sprints views) ---------- */
 function handleItemInput(e){
@@ -1068,6 +1196,16 @@ function handleItemChange(e){
     const row=e.target.closest('.subtaskRow');const st=it.subtasks.find(s=>s.id===row.dataset.stid);if(!st)return true;
     st.done=e.target.checked;renderAll();save();return true;
   }
+  if(r==='estimatedHours'){
+    const v=e.target.value.trim();
+    it.estimatedHours=v===''?null:Math.max(0,parseFloat(v)||0);
+    renderAll();save();return true;
+  }
+  if(r==='linkBlockerPick'){
+    const pid=e.target.value;
+    if(pid){it.blockedBy=[...(it.blockedBy||[]),pid];renderAll();save();}
+    return true;
+  }
   return false;
 }
 function addNoteFromItem(itemEl,root){
@@ -1085,7 +1223,12 @@ function handleItemClick(e){
   const itemEl=e.target.closest('.item');if(!itemEl)return false;
   const it=getItem(itemEl.dataset.iid);if(!it)return false;
   const root=e.currentTarget;
-  if(r==='confirm'){it.confirm=!it.confirm;it.pendingResolved=it.confirm?false:true;renderAll();save();return true;}
+  if(r==='bangToggle'){itemEl.classList.toggle('showBlockers');return true;}
+  if(r==='unlinkBlocker'){
+    const pid=e.target.dataset.pendingId;
+    it.blockedBy=(it.blockedBy||[]).filter(id=>id!==pid);
+    renderAll();save();return true;
+  }
   if(r==='itemToggle'){if(collapsedItems.has(it.id))collapsedItems.delete(it.id);else collapsedItems.add(it.id);renderAll();return true;}
   if(r==='noteToggle'){itemEl.classList.toggle('showNote');if(itemEl.classList.contains('showNote')){const inp=itemEl.querySelector('.noteInput');if(inp)inp.focus();}return true;}
   if(r==='addNote'){addNoteFromItem(itemEl,root);return true;}
@@ -1192,7 +1335,7 @@ S.addEventListener('click',e=>{
   if(r==='secToggle'){const sid=e.target.closest('.section').dataset.sid;if(collapsedSections.has(sid))collapsedSections.delete(sid);else collapsedSections.add(sid);renderBacklog();}
   else if(r==='delItem'){const s=getSection(e.target.closest('.section').dataset.sid);const iid=e.target.closest('.item').dataset.iid;
     s.items=s.items.filter(i=>i.id!==iid);state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='item'&&n.target.id===iid));renderAll();save();}
-  else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'N',confirm:false,progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,pendingResolved:false,urgency:'media'};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
+  else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'N',progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,blockedBy:[],estimatedHours:null};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
   else if(r==='delSection'){const sid=e.target.closest('.section').dataset.sid;const s=getSection(sid);
     if(confirm(`Remover a seção "${s.title||'sem título'}" e seus ${s.items.length} itens?`)){
       const ids=[sid,...s.items.map(i=>i.id)];state.sections=state.sections.filter(x=>x.id!==sid);
@@ -1210,6 +1353,7 @@ SP.addEventListener('input',e=>{
   const sp=state.sprints.find(s=>s.id===card.dataset.spid);if(!sp)return;
   if(r==='sprintName'){sp.name=e.target.value;save();}
   else if(r==='sprintGoal'){sp.goal=e.target.value;autosize(e.target);save();}
+  else if(r==='sprintNumber'){sp.number=e.target.value;save();}
 });
 SP.addEventListener('change',e=>{
   if(handleItemChange(e))return;
@@ -1338,30 +1482,33 @@ PD.addEventListener('input',e=>{
   const p=state.pendingItems.find(x=>x.id===id);if(!p)return;
   if(r==='pendingTitle'){p.title=e.target.value;save();}
   else if(r==='pendingDescription'){p.description=e.target.value;autosize(e.target);save();}
+  else if(r==='pendingResponsible'){p.responsible=e.target.value;save();}
 });
 PD.addEventListener('change',e=>{
-  const r=e.target.dataset.role;
+  const r=e.target.dataset.role;const id=e.target.dataset.id;
+  const p=state.pendingItems.find(x=>x.id===id);if(!p)return;
   if(r==='pendingUrgency'){
-    const kind=e.target.dataset.kind,id=e.target.dataset.id,v=e.target.value;
-    if(kind==='backlog'){const it=getItem(id);if(!it)return;it.urgency=v;}
-    else{const p=state.pendingItems.find(x=>x.id===id);if(!p)return;p.urgency=v;}
-    e.target.className='urgency urgency-'+v;
+    p.urgency=e.target.value;
+    e.target.className='urgency urgency-'+p.urgency;
     renderPending();save();
   }
 });
 PD.addEventListener('click',e=>{
   const r=e.target.dataset.role;if(!r)return;
+  const id=e.target.dataset.id;
   if(r==='togglePendingResolved'){
-    const kind=e.target.dataset.kind,id=e.target.dataset.id;
-    if(kind==='backlog'){const it=getItem(id);if(!it)return;
-      if(it.pendingResolved){it.pendingResolved=false;it.confirm=true;}else{it.pendingResolved=true;it.confirm=false;}
+    const p=state.pendingItems.find(x=>x.id===id);if(!p)return;
+    p.status=p.status==='resolved'?'open':'resolved';
+    renderAll();save();
+  }else if(r==='delPendingItem'){
+    if(confirm('Remover este item pendente? Isso também remove o vínculo com quaisquer itens do Backlog que ele bloqueia.')){
+      state.sections.forEach(sec=>sec.items.forEach(it=>{it.blockedBy=(it.blockedBy||[]).filter(x=>x!==id);}));
+      state.pendingItems=state.pendingItems.filter(x=>x.id!==id);
       renderAll();save();
-    }else{const p=state.pendingItems.find(x=>x.id===id);if(!p)return;p.status=p.status==='resolved'?'open':'resolved';renderPending();save();}
-  }else if(r==='delPendingStandalone'){
-    if(confirm('Remover este item pendente?')){state.pendingItems=state.pendingItems.filter(x=>x.id!==e.target.dataset.id);renderPending();save();}
+    }
   }else if(r==='gotoBacklog'){
     const iid=e.target.dataset.nodeId;setView('backlog');renderAll();
-    setTimeout(()=>{const node=document.querySelector(`[data-iid="${iid}"]`);if(node){node.scrollIntoView({behavior:'smooth',block:'center'});node.classList.add('showNote');}},0);
+    setTimeout(()=>{const node=document.querySelector(`[data-iid="${iid}"]`);if(node){node.scrollIntoView({behavior:'smooth',block:'center'});node.classList.add('showBlockers');}},0);
   }
 });
 
@@ -1423,14 +1570,20 @@ el('changeAuthor').addEventListener('click',()=>{
 
 /* ---------- toolbar ---------- */
 el('filterBang').addEventListener('click',()=>{document.body.classList.toggle('filtering');el('filterBang').classList.toggle('active');applyFilter();updateBangCount();});
-el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'N',confirm:false,progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,pendingResolved:false,urgency:'media'}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
+el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'N',progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,blockedBy:[],estimatedHours:null}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
 el('addSprint').addEventListener('click',()=>{
   const today=new Date().toISOString().slice(0,10);
-  const nextNumber=state.sprints.reduce((m,s)=>Math.max(m,s.number||0),0)+1;
-  const sp={id:uid(),number:nextNumber,name:'',goal:'',start:today,end:'',status:'planned'};
+  const number=computeSprintNumber(today,null);
+  const sp={id:uid(),number,name:'',goal:'',start:today,end:'',status:'planned'};
   state.sprints.push(sp);expandedSprints.add(sp.id);renderSprints();save();
   const n=document.querySelector(`[data-spid="${sp.id}"] .sprintName`);
   if(n){n.focus();n.scrollIntoView({behavior:'smooth',block:'center'});}
+});
+el('renumberSprints').addEventListener('click',()=>{
+  if(!confirm('Renumerar todos os sprints sequencialmente por data? Isso substitui números com sufixos (ex.: 4b) e não atualiza referências existentes em notas, reuniões ou retrospectivas.'))return;
+  const sorted=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  sorted.forEach((sp,idx)=>{sp.number=String(idx+1);});
+  renderSprints();save();
 });
 el('addMarco').addEventListener('click',()=>{
   const m={id:uid(),title:'',description:'',completed:false,sprintId:null};
@@ -1446,10 +1599,10 @@ el('addMeeting').addEventListener('click',()=>{
   if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
 });
 el('addPendingItem').addEventListener('click',()=>{
-  const p={id:uid(),origin:'standalone',title:'Novo item pendente',description:'',author:ensureAuthor(),createdAt:new Date().toISOString(),status:'open',urgency:'media'};
+  const p={id:uid(),title:'Novo item pendente',description:'',author:ensureAuthor(),responsible:'',createdAt:new Date().toISOString(),status:'open',urgency:'media'};
   state.pendingItems.push(p);renderPending();save();
-  const t=document.querySelector(`.pendingCard[data-id="${p.id}"] .pendingTitleInput`);
-  if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}
+  const t=document.querySelector(`.pendingCard[data-id="${p.id}"] .pendingResponsibleInput`);
+  if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
 });
 el('filterPending').addEventListener('click',()=>{document.body.classList.toggle('pendingShowAll');renderPending();});
 el('filterUrgency').addEventListener('change',()=>{renderPending();});
@@ -1475,11 +1628,22 @@ function toMarkdown(){
     const items=assignedItems(sp.id);
     const total=items.length,done=items.filter(it=>itemProgress(it)===100).length;
     const avg=total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0;
+    const hasHours=items.some(it=>it.estimatedHours!=null&&it.estimatedHours>0);
+    const totalHours=Math.round(items.reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
+    const doneHours=Math.round(items.filter(it=>itemProgress(it)===100).reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
     md+=`### ${sprintLabel(sp)}\n`;
-    md+=`Status: \`${sp.status}\` · ${sp.start||'—'} a ${sp.end||'—'} · progresso: ${done}/${total} concluídos · ${avg}%\n\n`;
+    md+=`Status: \`${sp.status}\` · ${sp.start||'—'} a ${sp.end||'—'} · progresso: ${done}/${total} concluídos · ${avg}%`;
+    if(hasHours)md+=` · ${totalHours}h estimadas (${doneHours}h concluídas)`;
+    md+='\n\n';
     if(sp.goal)md+=`${sp.goal}\n\n`;
     if(items.length){
-      items.forEach(it=>{md+=`- ${itemProgress(it)===100?'[x] ':'[ ] '}${it.text}\n`;});
+      items.forEach(it=>{
+        md+=`- ${itemProgress(it)===100?'[x] ':'[ ] '}${it.text}`;
+        if(it.estimatedHours!=null&&it.estimatedHours>0)md+=` (${it.estimatedHours}h)`;
+        md+='\n';
+        const blockers=itemBlockers(it);
+        if(blockers.length)md+=`  - bloqueado por: ${blockers.map(p=>p.title||'(sem título)').join(', ')}\n`;
+      });
       md+='\n';
     }
     const spNotes=sprintNotes(sp);
@@ -1492,11 +1656,17 @@ function toMarkdown(){
     md+='\n';
     s.items.forEach(it=>{
       const prog=itemProgress(it);
-      const ck=prog===100?'[x] ':'[ ] ';const bang=it.confirm?'`(!)` ':'';const tag=it.status?`\`[${it.status}]\` `:'';
+      const blockState=itemBlockState(it);
+      const ck=prog===100?'[x] ':'[ ] ';
+      const bang=blockState==='open'?'`(!)` ':blockState==='resolved'?'`(!resolvido)` ':'';
+      const tag=it.status?`\`[${it.status}]\` `:'';
       md+=`- ${ck}${bang}${tag}${it.text}`;
       if(it.progressType==='percent')md+=` (${prog}%)`;
+      if(it.estimatedHours!=null&&it.estimatedHours>0)md+=` [${it.estimatedHours}h]`;
       md+='\n';
       if(it.progressType==='subtasks'&&it.subtasks.length)it.subtasks.forEach(st=>{md+=`  - [${st.done?'x':' '}] ${st.text}\n`;});
+      const blockers=itemBlockers(it);
+      if(blockers.length)md+=`  - bloqueado por: ${blockers.map(p=>p.title||'(sem título)').join(', ')}\n`;
       const notes=itemNotes(it);if(notes.length)notes.forEach(n=>{md+=`  - _nota (${n.author}): ${n.text.replace(/\n/g,' ')}_\n`;});
     });
     md+='\n';
@@ -1527,9 +1697,10 @@ function toMarkdown(){
   const pendingList=buildPendingList();
   if(!pendingList.length)md+='_Nenhum item pendente._\n\n';
   pendingList.forEach(p=>{
-    const origin=p.kind==='backlog'?`Backlog · ${p.sectionTitle}`:'Adicionado diretamente';
-    md+=`- **${p.title}** \`[${p.urgency}]\` — ${p.resolved?'resolvido':'aberto'} _(${origin})_\n`;
-    if(p.kind==='standalone'&&p.description)md+=`  ${p.description}\n`;
+    const blocked=pendingBlockedItems(p);
+    md+=`- **${p.title}** \`[${p.urgency}]\` — ${p.status==='resolved'?'resolvido':'aberto'} · responsável: ${p.responsible||'—'}\n`;
+    if(p.description)md+=`  ${p.description}\n`;
+    if(blocked.length)md+=`  - bloqueia: ${blocked.map(it=>(it.text||'(sem texto)').slice(0,60)).join(', ')}\n`;
   });
   md+='\n';
 
@@ -1562,7 +1733,8 @@ function normalize(o){
     if(!Array.isArray(i.subtasks))i.subtasks=[];
     i.subtasks.forEach(st=>{st.id=st.id||uid();st.text=st.text||'';st.done=!!st.done;});
     if(i.percent===undefined)i.percent=0;
-    if(i.confirm===undefined)i.confirm=false;
+    delete i.confirm;delete i.pendingResolved;delete i.urgency;
+    if(!Array.isArray(i.blockedBy))i.blockedBy=[];
     if(typeof i.notes==='string'){
       i.notes=i.notes.trim()?[{id:uid(),author:'—',ts:new Date(0).toISOString(),text:i.notes}]:[];
     }
@@ -1574,19 +1746,32 @@ function normalize(o){
       delete i.notes;
     }
     if(i.sprintId===undefined)i.sprintId=null;
-    if(i.pendingResolved===undefined)i.pendingResolved=false;
-    if(i.urgency===undefined)i.urgency='media';
+    if(i.estimatedHours===undefined)i.estimatedHours=null;
   });});
   if(o.abas)delete o.abas;
   if(o.sheetMappingDoc===undefined)o.sheetMappingDoc=DEFAULT_STATE.sheetMappingDoc;
   if(!Array.isArray(o.sprints))o.sprints=[];
-  let maxNum=o.sprints.reduce((m,s)=>Math.max(m,s.number||0),0);
   o.sprints.forEach(s=>{
     s.id=s.id||uid();s.name=s.name||'';s.goal=s.goal||'';s.start=s.start||'';s.end=s.end||'';s.status=s.status||'planned';
-    if(!s.number){maxNum+=1;s.number=maxNum;}
+    if(s.number!==undefined&&s.number!==null&&s.number!=='')s.number=String(s.number);
   });
+  {
+    const sortedForNum=[...o.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+    let seq=0;
+    sortedForNum.forEach(s=>{
+      if(s.number===undefined||s.number===null||s.number===''){seq+=1;s.number=String(seq);}
+      else{const n=parseInt(s.number,10);if(!isNaN(n)&&n>seq)seq=n;}
+    });
+  }
   if(!Array.isArray(o.pendingItems))o.pendingItems=[];
-  o.pendingItems.forEach(p=>{p.id=p.id||uid();p.origin='standalone';p.status=p.status||'open';p.createdAt=p.createdAt||new Date(0).toISOString();p.urgency=p.urgency||'media';});
+  o.pendingItems.forEach(p=>{
+    p.id=p.id||uid();delete p.origin;
+    p.status=p.status||'open';p.createdAt=p.createdAt||new Date(0).toISOString();p.urgency=p.urgency||'media';
+    p.responsible=p.responsible||'';
+  });
+  (o.sections||[]).forEach(s=>(s.items||[]).forEach(i=>{
+    i.blockedBy=(i.blockedBy||[]).filter(id=>o.pendingItems.some(p=>p.id===id));
+  }));
   if(!Array.isArray(o.milestones))o.milestones=JSON.parse(JSON.stringify(DEFAULT_STATE.milestones));
   o.milestones.forEach(m=>{m.id=m.id||uid();m.title=m.title||'';m.description=m.description||'';m.completed=!!m.completed;if(m.sprintId===undefined)m.sprintId=null;});
   if(!Array.isArray(o.meetings))o.meetings=[];
