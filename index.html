@@ -39,6 +39,7 @@
   button.tb.primary:hover{background:var(--accent-ink)}
   button.tb.bangfilter{border-color:#eec3bc;color:var(--bang)}
   button.tb.bangfilter.active{background:var(--bang);color:#fff;border-color:var(--bang)}
+  button.tb.active{background:var(--accent);color:#fff;border-color:var(--accent)}
   .filterSelect{border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600;padding:6px 10px;border-radius:8px;font-size:13.5px;cursor:pointer}
   .saveState{margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:600}
 
@@ -130,6 +131,11 @@
   body:not([data-view="pending"]) #addPendingItem{display:none}
   body:not([data-view="pending"]) #filterPending{display:none}
   body:not([data-view="pending"]) #filterUrgency{display:none}
+  body:not([data-view="pending"]) #filterResponsible{display:none}
+  body:not([data-view="notas"]) #notesAddToggle{display:none}
+  body:not([data-view="notas"]) #notesFilterAuthor{display:none}
+  body:not([data-view="notas"]) #notesFilterTarget{display:none}
+  body:not([data-view="notas"]) #notesFilterReplies{display:none}
 
   select:disabled,button:disabled,input:disabled{opacity:.4;cursor:not-allowed}
 
@@ -212,6 +218,10 @@
   .sprintBar{height:6px;background:var(--nonebg);border-radius:999px;overflow:hidden;margin-top:8px}
   .sprintBarFill{height:100%;background:var(--accent)}
   .sprintProgressText{font-size:12px;color:var(--muted);margin-top:4px;font-weight:600}
+  .sprintMilestones{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
+  .sprintMilestoneChip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#eef1f5;color:var(--accent-ink);font-weight:700;font-size:12.5px;padding:5px 11px;border-radius:999px;cursor:pointer}
+  .sprintMilestoneChip:hover{border-color:var(--accent);background:#e4eaf1}
+  .sprintMilestoneChip.done{background:var(--Ebg);color:var(--E);border-color:#bfe3d1}
   .sprintBody{display:none;margin-top:8px}
   .sprintCard.expanded .sprintBody{display:block}
 
@@ -219,6 +229,7 @@
   .pendingCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
   .pendingCard.resolved{border-left:3px solid var(--E);background:#f3f9f5;opacity:.75}
   .pendingHead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+  .pendingHead .handle{font-size:15px;padding:0}
   .pendingOriginBadge{font-size:11px;font-weight:700;color:var(--muted);background:#f0ede8;border:none;border-radius:999px;padding:2px 8px;cursor:default}
   .pendingOriginBadge.clickable{cursor:pointer}
   .pendingOriginBadge.clickable:hover{color:var(--accent-ink);background:#eef4f1}
@@ -227,9 +238,13 @@
   .pendingAuthor{font-size:12px;color:var(--muted);margin-top:2px}
   .pendingActions{display:flex;gap:6px;margin-top:6px;align-items:center}
   .pendingResponsibleRow{margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pendingResponsibleRow.warn{background:var(--bangbg);border-radius:9px;padding:6px 8px}
+  .respChips{display:flex;flex-wrap:wrap;gap:6px}
+  .respChip{display:inline-flex;align-items:center;gap:2px;background:#eef1f5;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:12px;font-weight:600;color:var(--accent-ink)}
+  .respChipRemove{border:none;background:transparent;color:#9aa3ad;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:999px;line-height:1}
+  .respChipRemove:hover{color:var(--bang);background:#fff}
   .pendingResponsibleInput{flex:1;min-width:160px;border:1px dashed var(--line);border-radius:7px;padding:5px 8px;font-size:13px;color:var(--ink);background:var(--panel)}
   .pendingResponsibleInput:focus{outline:2px solid var(--accent);background:#fff}
-  .pendingResponsibleRow.warn .pendingResponsibleInput{border-color:var(--bang);background:var(--bangbg)}
   .pendingWarnLabel{font-size:11px;font-weight:700;color:var(--bang)}
   .pendingBlocks{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
   .pendingBlocksLabel{font-size:11.5px;color:var(--muted);font-weight:600}
@@ -255,7 +270,8 @@
   .milestoneTitle:focus{outline:2px solid var(--accent);background:#fff}
 
   /* notas tab */
-  .notesAddRow{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .notesAddRow{display:none;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .notesAddRow.open{display:flex}
   .noteRow{margin-bottom:8px}
   .noteAddress{color:var(--accent-ink);font-weight:700}
 
@@ -292,6 +308,22 @@
         <option value="media">Média</option>
         <option value="alta">Alta</option>
       </select>
+      <select class="filterSelect" id="filterResponsible">
+        <option value="">Todos os responsáveis</option>
+      </select>
+      <button class="tb primary" id="notesAddToggle">+ Nova nota</button>
+      <select class="filterSelect" id="notesFilterAuthor">
+        <option value="">Todos os autores</option>
+      </select>
+      <select class="filterSelect" id="notesFilterTarget">
+        <option value="">Todos os destinos</option>
+        <option value="backlog">Backlog</option>
+        <option value="sprint">Sprint</option>
+        <option value="milestone">Marco</option>
+        <option value="doc">Documento</option>
+        <option value="note">Nota (respostas)</option>
+      </select>
+      <button class="tb" id="notesFilterReplies">Só com respostas</button>
       <button class="tb" id="expMd">Exportar Markdown</button>
       <button class="tb" id="expJson">Exportar JSON</button>
       <button class="tb" id="impBtn">Importar JSON</button>
@@ -349,10 +381,11 @@
 
   <div id="view-notas">
     <div class="hint">Todas as notas do documento, da mais recente para a mais antiga. Respostas a notas são criadas a partir do local onde a nota vive, não aqui.</div>
-    <div class="notesAddRow">
+    <div class="notesAddRow" id="notesAddForm">
       <select class="filterSelect" id="notesTargetPick"></select>
       <input class="noteInput" id="notesAddInput" placeholder="escrever nota…">
       <button class="noteAddBtn" id="notesAddBtn">+</button>
+      <button class="tb" id="notesAddCancel">Cancelar</button>
     </div>
     <div id="notasList"></div>
   </div>
@@ -399,7 +432,7 @@ const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&g
 const el=id=>document.getElementById(id);
 
 /* ---------- default data ---------- */
-function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],progressType:'check',done:false,subtasks:[],percent:0,text:a[2],sprintId:null,blockedBy:[],estimatedHours:null}));}
+function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],progressType:'check',done:false,subtasks:[],percent:0,text:a[2],sprintId:null,sprintOrder:null,blockedBy:[],estimatedHours:null}));}
 const DEFAULT_STATE={
   docTitle:'Agile Mesa Spasso',docSub:'Spasso',activeView:'sprints',
   footNote:'A sequência das seções reflete a dependência lógica entre as frentes, não a ordem de execução. No planejamento de sprints, frentes independentes — como Precificação e Fundação — podem avançar em paralelo.',
@@ -667,7 +700,7 @@ function itemHTML(it,opts){
         </div>
       </div>
     </div>
-    ${opts.hideActions?'':'<span class="handle item-handle">⋮⋮</span><button class="itemDel" data-role="delItem" title="Remover item">✕</button>'}
+    ${opts.hideActions?(opts.sprintHandle?'<span class="handle sprint-item-handle">⋮⋮</span>':''):'<span class="handle item-handle">⋮⋮</span><button class="itemDel" data-role="delItem" title="Remover item">✕</button>'}
   </div>`;
 }
 function sectionHTML(s){
@@ -737,7 +770,14 @@ function addNoteToDoc(){
 let expandedSprints=new Set();
 function assignedItems(sprintId){
   const out=[];state.sections.forEach(s=>s.items.forEach(it=>{if(it.sprintId===sprintId)out.push(it);}));
+  out.sort((a,b)=>(a.sprintOrder==null?Infinity:a.sprintOrder)-(b.sprintOrder==null?Infinity:b.sprintOrder));
   return out;
+}
+function sprintMilestones(sp){return state.milestones.filter(m=>m.sprintId===sp.id);}
+function sprintMilestonesHTML(sp){
+  const ms=sprintMilestones(sp);
+  if(!ms.length)return '';
+  return `<div class="sprintMilestones">${ms.map(m=>`<button class="sprintMilestoneChip ${m.completed?'done':''}" data-role="gotoMilestone" data-milestone-id="${m.id}">${m.completed?'✓':'◆'} ${esc(m.title||'(sem título)')}</button>`).join('')}</div>`;
 }
 function nextLetterSuffix(baseNumber,existingNumbers){
   const m=/^(\d+)([a-z]*)$/i.exec(baseNumber||'');
@@ -793,9 +833,10 @@ function sprintHTML(sp){
     </div>
     <div class="sprintBar"><div class="sprintBarFill" style="width:${avg}%"></div></div>
     <div class="sprintProgressText">${done}/${total} concluídos · ${avg}%${hasHours?` · ${totalHours}h estimadas (${doneHours}h concluídas)`:''}</div>
+    ${sprintMilestonesHTML(sp)}
     <div class="sprintBody">
       <textarea class="secIntro" data-role="sprintGoal" rows="1" placeholder="objetivo do sprint…">${esc(sp.goal)}</textarea>
-      <div class="items">${items.map(it=>itemHTML(it,{hideActions:true})).join('')||'<span class="noneTxt">— nenhum item vinculado —</span>'}</div>
+      <div class="items sprintItems" data-spid="${sp.id}">${items.map(it=>itemHTML(it,{hideActions:true,sprintHandle:true})).join('')||'<span class="noneTxt">— nenhum item vinculado —</span>'}</div>
       <div class="sprintNotes">
         <div class="noteList">${noteListHTML(notes)}</div>
         <div class="noteAddRow">
@@ -811,6 +852,7 @@ function renderSprints(){
   el('sprintsList').innerHTML=sorted.map(sprintHTML).join('')||'<div class="hint">Nenhum sprint criado ainda.</div>';
   document.querySelectorAll('#sprintsList .secIntro,#sprintsList .itemText').forEach(autosize);
   initSubtaskSortables();
+  initSprintItemSortables();
 }
 function addNoteToSprint(spId,inp,root){
   const v=(inp.value||'').trim();if(!v)return;
@@ -973,7 +1015,6 @@ function handleMeetingEntryClick(e){
 }
 
 /* ---------- pending items render ---------- */
-const URGENCY_RANK={alta:3,media:2,baixa:1};
 function pendingUrgencySelectHTML(p){
   return `<select class="urgency urgency-${p.urgency}" data-role="pendingUrgency" data-id="${p.id}" title="Urgência">${urgencyOptions(p.urgency)}</select>`;
 }
@@ -983,22 +1024,31 @@ function pendingBlockedItems(p){
   return out;
 }
 function buildPendingList(){
-  return [...state.pendingItems].sort((a,b)=>{
-    const ur=(URGENCY_RANK[b.urgency]||0)-(URGENCY_RANK[a.urgency]||0);
-    if(ur!==0)return ur;
-    return (new Date(b.createdAt).getTime()||0)-(new Date(a.createdAt).getTime()||0);
-  });
+  return [...state.pendingItems];
+}
+function distinctResponsibles(){
+  const set=new Set();
+  state.pendingItems.forEach(p=>(p.responsible||[]).forEach(r=>{if(r&&r.trim())set.add(r.trim());}));
+  return [...set].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+function responsibleChipsHTML(p){
+  return (p.responsible||[]).map((r,idx)=>`<span class="respChip"><span class="respChipText">${esc(r)}</span><button class="respChipRemove" data-role="removeResponsible" data-id="${p.id}" data-idx="${idx}" title="Remover">✕</button></span>`).join('');
 }
 function pendingHTML(p){
   const resolved=p.status==='resolved';
-  const noResponsible=!p.responsible||!p.responsible.trim();
+  const noResponsible=!(p.responsible&&p.responsible.length);
   const blocked=pendingBlockedItems(p);
   return `<div class="pendingCard ${resolved?'resolved':''}" data-id="${p.id}">
-    <div class="pendingHead">${pendingUrgencySelectHTML(p)}</div>
+    <div class="pendingHead">
+      <span class="handle pending-handle">⋮⋮</span>
+      ${pendingUrgencySelectHTML(p)}
+    </div>
     <input class="pendingTitleInput" data-role="pendingTitle" data-id="${p.id}" value="${esc(p.title)}">
     <textarea class="secIntro" data-role="pendingDescription" data-id="${p.id}" rows="1" placeholder="descrição…">${esc(p.description||'')}</textarea>
     <div class="pendingResponsibleRow ${noResponsible?'warn':''}">
-      <input class="pendingResponsibleInput" data-role="pendingResponsible" data-id="${p.id}" value="${esc(p.responsible||'')}" placeholder="responsável (pessoa, time, empresa, terceiro…)">
+      <div class="respChips">${responsibleChipsHTML(p)}</div>
+      <input class="pendingResponsibleInput" data-role="pendingResponsibleNew" data-id="${p.id}" placeholder="adicionar responsável…">
+      <button class="noteAddBtn" data-role="addResponsible" data-id="${p.id}">+</button>
       ${noResponsible?'<span class="pendingWarnLabel">defina um responsável</span>':''}
     </div>
     <div class="pendingAuthor">por ${esc(p.author||'')}</div>
@@ -1009,15 +1059,37 @@ function pendingHTML(p){
     </div>
   </div>`;
 }
+function rebuildPendingFromDOM(){
+  const map={};state.pendingItems.forEach(p=>map[p.id]=p);
+  const visibleIds=[...document.querySelectorAll('#pendingList > .pendingCard')].map(e=>e.dataset.id);
+  if(!visibleIds.length)return;
+  const visibleSet=new Set(visibleIds);
+  let vi=0;
+  state.pendingItems=state.pendingItems.map(p=>visibleSet.has(p.id)?map[visibleIds[vi++]]:p);
+  save();
+}
+function initPendingSortable(){
+  sortables.filter(s=>s._pd).forEach(s=>{try{s.destroy()}catch(e){}});
+  sortables=sortables.filter(s=>!s._pd);
+  if(!window.Sortable)return;
+  const s=Sortable.create(el('pendingList'),{handle:'.pending-handle',draggable:'.pendingCard',animation:150,onEnd:rebuildPendingFromDOM});
+  s._pd=1;sortables.push(s);
+}
 function renderPending(){
   const showAll=document.body.classList.contains('pendingShowAll');
   const urgencyFilter=el('filterUrgency').value;
+  const respSel=el('filterResponsible');
+  const prevResp=respSel.value;
+  respSel.innerHTML='<option value="">Todos os responsáveis</option>'+distinctResponsibles().map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('');
+  if([...respSel.options].some(o=>o.value===prevResp))respSel.value=prevResp;
   let list=buildPendingList();
   if(!showAll)list=list.filter(p=>p.status!=='resolved');
   if(urgencyFilter)list=list.filter(p=>p.urgency===urgencyFilter);
+  if(respSel.value)list=list.filter(p=>(p.responsible||[]).includes(respSel.value));
   el('pendingList').innerHTML=list.length?list.map(pendingHTML).join(''):'<div class="hint">Nenhum item pendente.</div>';
   document.querySelectorAll('#pendingList .secIntro').forEach(autosize);
   el('filterPending').textContent=showAll?'Mostrar apenas abertas':'Mostrar tudo';
+  initPendingSortable();
 }
 
 /* ---------- notas (all notes, flat) render ---------- */
@@ -1052,9 +1124,28 @@ function notesTargetOptions(){
   o+='<optgroup label="Documento"><option value="doc:sheet-mapping-doc">Mapa da Planilha</option></optgroup>';
   return o;
 }
+function noteMatchesTargetFilter(n,filter){
+  if(!filter)return true;
+  const t=n.target&&n.target.type;
+  if(filter==='backlog')return t==='item'||t==='section';
+  return t===filter;
+}
 function renderNotas(){
-  const list=allNotesSorted();
-  el('notasList').innerHTML=list.length?list.map(noteRowHTML).join(''):'<div class="hint">Nenhuma nota ainda.</div>';
+  const authorSel=el('notesFilterAuthor');
+  const prevAuthor=authorSel.value;
+  const authors=[...new Set(state.notes.map(n=>n.author).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  authorSel.innerHTML='<option value="">Todos os autores</option>'+authors.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');
+  if(authors.includes(prevAuthor))authorSel.value=prevAuthor;
+
+  const targetFilter=el('notesFilterTarget').value;
+  const onlyReplies=document.body.classList.contains('notesOnlyReplies');
+
+  let list=allNotesSorted();
+  if(authorSel.value)list=list.filter(n=>n.author===authorSel.value);
+  if(targetFilter)list=list.filter(n=>noteMatchesTargetFilter(n,targetFilter));
+  if(onlyReplies)list=list.filter(n=>noteDescendants(n.id).length>0);
+
+  el('notasList').innerHTML=list.length?list.map(noteRowHTML).join(''):'<div class="hint">Nenhuma nota encontrada.</div>';
   const pick=el('notesTargetPick');
   const prev=pick.value;
   pick.innerHTML=notesTargetOptions();
@@ -1075,6 +1166,7 @@ function addNoteFromNotasTab(){
   else if(type==='doc'){label='Mapa da Planilha';}
   state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text,target:{type,id,label}});
   inp.value='';
+  el('notesAddForm').classList.remove('open');
   renderAll();save();
 }
 
@@ -1132,7 +1224,7 @@ function renderRetro(){
 function renderAll(){renderBacklog();renderSheetDoc();renderSprints();renderMarcos();renderPending();renderNotas();renderMeetings();}
 
 function autosize(e){if(!e)return;e.style.height='auto';e.style.height=e.scrollHeight+'px';}
-function autosizeAll(){document.querySelectorAll('.secIntro,.itemText,#footNote').forEach(autosize);}
+function autosizeAll(){document.querySelectorAll('.secIntro,.itemText,#footNote,.docEdit').forEach(autosize);}
 
 /* ---------- drag ---------- */
 function rebuildBacklogFromDOM(){
@@ -1151,7 +1243,24 @@ function initSortables(){
   sortables=sortables.filter(s=>!s._bl);
   if(!window.Sortable)return;
   const a=Sortable.create(el('sections'),{handle:'.sec-handle',draggable:'.section',animation:150,onEnd:rebuildBacklogFromDOM});a._bl=1;sortables.push(a);
-  document.querySelectorAll('.items').forEach(c=>{const s=Sortable.create(c,{handle:'.item-handle',group:'items',draggable:'.item',animation:150,onEnd:rebuildBacklogFromDOM});s._bl=1;sortables.push(s);});
+  document.querySelectorAll('#sections .items').forEach(c=>{const s=Sortable.create(c,{handle:'.item-handle',group:'items',draggable:'.item',animation:150,onEnd:rebuildBacklogFromDOM});s._bl=1;sortables.push(s);});
+}
+function rebuildSprintItemsFromDOM(sprintId){
+  const container=document.querySelector(`.sprintItems[data-spid="${sprintId}"]`);
+  if(!container)return;
+  const ids=[...container.querySelectorAll(':scope > .item')].map(e=>e.dataset.iid);
+  ids.forEach((id,idx)=>{const it=getItem(id);if(it)it.sprintOrder=idx;});
+  save();
+}
+function initSprintItemSortables(){
+  sortables.filter(s=>s._si).forEach(s=>{try{s.destroy()}catch(e){}});
+  sortables=sortables.filter(s=>!s._si);
+  if(!window.Sortable)return;
+  document.querySelectorAll('.sprintItems').forEach(c=>{
+    const spId=c.dataset.spid;
+    const s=Sortable.create(c,{handle:'.sprint-item-handle',group:'sprint-'+spId,draggable:'.item',animation:150,onEnd:()=>rebuildSprintItemsFromDOM(spId)});
+    s._si=1;sortables.push(s);
+  });
 }
 function rebuildSubtasksFromDOM(blockEl){
   const itemEl=blockEl.closest('.item');if(!itemEl)return;
@@ -1189,7 +1298,17 @@ function handleItemChange(e){
   const it=getItem(itemEl.dataset.iid);if(!it)return false;
   if(r==='status'){it.status=e.target.value;e.target.className='status '+(it.status||'');save();return true;}
   if(r==='done'){it.done=e.target.checked;renderAll();save();return true;}
-  if(r==='sprintPick'){it.sprintId=e.target.value||null;renderAll();save();return true;}
+  if(r==='sprintPick'){
+    const newSid=e.target.value||null;
+    if(newSid){
+      const existing=assignedItems(newSid);
+      const maxOrder=existing.reduce((m,x)=>Math.max(m,x.sprintOrder==null?-1:x.sprintOrder),-1);
+      it.sprintId=newSid;it.sprintOrder=maxOrder+1;
+    }else{
+      it.sprintId=null;it.sprintOrder=null;
+    }
+    renderAll();save();return true;
+  }
   if(r==='subtasksAllDone'){const v=e.target.checked;it.subtasks.forEach(st=>st.done=v);renderAll();save();return true;}
   if(r==='percent'){let v=parseInt(e.target.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(100,v));it.percent=v;renderAll();save();return true;}
   if(r==='subtaskDone'){
@@ -1335,7 +1454,7 @@ S.addEventListener('click',e=>{
   if(r==='secToggle'){const sid=e.target.closest('.section').dataset.sid;if(collapsedSections.has(sid))collapsedSections.delete(sid);else collapsedSections.add(sid);renderBacklog();}
   else if(r==='delItem'){const s=getSection(e.target.closest('.section').dataset.sid);const iid=e.target.closest('.item').dataset.iid;
     s.items=s.items.filter(i=>i.id!==iid);state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='item'&&n.target.id===iid));renderAll();save();}
-  else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'N',progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,blockedBy:[],estimatedHours:null};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
+  else if(r==='addItem'){const s=getSection(e.target.closest('.section').dataset.sid);const it={id:uid(),status:'N',progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,sprintOrder:null,blockedBy:[],estimatedHours:null};s.items.push(it);renderAll();const ta=document.querySelector(`[data-iid="${it.id}"] .itemText`);if(ta)ta.focus();save();}
   else if(r==='delSection'){const sid=e.target.closest('.section').dataset.sid;const s=getSection(sid);
     if(confirm(`Remover a seção "${s.title||'sem título'}" e seus ${s.items.length} itens?`)){
       const ids=[sid,...s.items.map(i=>i.id)];state.sections=state.sections.filter(x=>x.id!==sid);
@@ -1383,6 +1502,11 @@ SP.addEventListener('click',e=>{
     const spId=e.target.dataset.sprintId;
     const inp=card.querySelector('[data-role="sprintNoteInput"]');
     if(inp)addNoteToSprint(spId,inp,e.currentTarget);
+  }
+  else if(r==='gotoMilestone'){
+    const mid=e.target.dataset.milestoneId;
+    setView('marcos');renderMarcos();
+    setTimeout(()=>{const mcard=document.querySelector(`.milestoneCard[data-mid="${mid}"]`);if(mcard)mcard.scrollIntoView({behavior:'smooth',block:'center'});},0);
   }
 });
 SP.addEventListener('keydown',handleItemKeydown);
@@ -1482,7 +1606,6 @@ PD.addEventListener('input',e=>{
   const p=state.pendingItems.find(x=>x.id===id);if(!p)return;
   if(r==='pendingTitle'){p.title=e.target.value;save();}
   else if(r==='pendingDescription'){p.description=e.target.value;autosize(e.target);save();}
-  else if(r==='pendingResponsible'){p.responsible=e.target.value;save();}
 });
 PD.addEventListener('change',e=>{
   const r=e.target.dataset.role;const id=e.target.dataset.id;
@@ -1509,6 +1632,27 @@ PD.addEventListener('click',e=>{
   }else if(r==='gotoBacklog'){
     const iid=e.target.dataset.nodeId;setView('backlog');renderAll();
     setTimeout(()=>{const node=document.querySelector(`[data-iid="${iid}"]`);if(node){node.scrollIntoView({behavior:'smooth',block:'center'});node.classList.add('showBlockers');}},0);
+  }else if(r==='addResponsible'){
+    const p=state.pendingItems.find(x=>x.id===id);if(!p)return;
+    const inp=e.target.closest('.pendingResponsibleRow').querySelector('[data-role="pendingResponsibleNew"]');
+    const v=(inp.value||'').trim();if(!v)return;
+    p.responsible=[...(p.responsible||[]),v];
+    renderAll();save();
+    const again=document.querySelector(`.pendingCard[data-id="${id}"] [data-role="pendingResponsibleNew"]`);
+    if(again)again.focus();
+  }else if(r==='removeResponsible'){
+    const p=state.pendingItems.find(x=>x.id===id);if(!p)return;
+    const idx=+e.target.dataset.idx;
+    p.responsible=(p.responsible||[]).filter((_,i)=>i!==idx);
+    renderAll();save();
+  }
+});
+PD.addEventListener('keydown',e=>{
+  if(e.target.dataset.role==='pendingResponsibleNew'&&e.key==='Enter'){
+    e.preventDefault();
+    const id=e.target.dataset.id;
+    const btn=document.querySelector(`.pendingCard[data-id="${id}"] [data-role="addResponsible"]`);
+    if(btn)btn.click();
   }
 });
 
@@ -1517,6 +1661,16 @@ const NT=el('notasList');
 NT.addEventListener('click',e=>{handleNoteClick(e);});
 el('notesAddBtn').addEventListener('click',addNoteFromNotasTab);
 el('notesAddInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addNoteFromNotasTab();}});
+el('notesAddToggle').addEventListener('click',()=>{
+  const form=el('notesAddForm');
+  const opening=!form.classList.contains('open');
+  form.classList.toggle('open');
+  if(opening)el('notesAddInput').focus();
+});
+el('notesAddCancel').addEventListener('click',()=>{el('notesAddInput').value='';el('notesAddForm').classList.remove('open');});
+el('notesFilterAuthor').addEventListener('change',renderNotas);
+el('notesFilterTarget').addEventListener('change',renderNotas);
+el('notesFilterReplies').addEventListener('click',()=>{document.body.classList.toggle('notesOnlyReplies');el('notesFilterReplies').classList.toggle('active');renderNotas();});
 
 /* ---------- retrospectives events ---------- */
 const RT=el('retroList');
@@ -1548,6 +1702,7 @@ function setView(v){
   state.activeView=v;document.body.dataset.view=v;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.viewId===v));
   if(v==='retro')loadRetrospectives();
+  autosizeAll();
   save();
 }
 el('tabs').addEventListener('click',e=>{
@@ -1570,7 +1725,7 @@ el('changeAuthor').addEventListener('click',()=>{
 
 /* ---------- toolbar ---------- */
 el('filterBang').addEventListener('click',()=>{document.body.classList.toggle('filtering');el('filterBang').classList.toggle('active');applyFilter();updateBangCount();});
-el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'N',progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,blockedBy:[],estimatedHours:null}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
+el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'N',progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,sprintOrder:null,blockedBy:[],estimatedHours:null}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
 el('addSprint').addEventListener('click',()=>{
   const today=new Date().toISOString().slice(0,10);
   const number=computeSprintNumber(today,null);
@@ -1599,13 +1754,14 @@ el('addMeeting').addEventListener('click',()=>{
   if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
 });
 el('addPendingItem').addEventListener('click',()=>{
-  const p={id:uid(),title:'Novo item pendente',description:'',author:ensureAuthor(),responsible:'',createdAt:new Date().toISOString(),status:'open',urgency:'media'};
+  const p={id:uid(),title:'Novo item pendente',description:'',author:ensureAuthor(),responsible:[],createdAt:new Date().toISOString(),status:'open',urgency:'media'};
   state.pendingItems.push(p);renderPending();save();
   const t=document.querySelector(`.pendingCard[data-id="${p.id}"] .pendingResponsibleInput`);
   if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
 });
 el('filterPending').addEventListener('click',()=>{document.body.classList.toggle('pendingShowAll');renderPending();});
 el('filterUrgency').addEventListener('change',()=>{renderPending();});
+el('filterResponsible').addEventListener('change',()=>{renderPending();});
 el('reset').addEventListener('click',()=>{if(confirm('Resetar para o conteúdo original? Suas edições serão perdidas (exporte antes).')){state=JSON.parse(JSON.stringify(DEFAULT_STATE));boot();save();}});
 function download(name,text,type){const b=new Blob([text],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),400);}
 el('expJson').addEventListener('click',()=>download('documento_projeto.json',JSON.stringify(state,null,2),'application/json'));
@@ -1698,7 +1854,7 @@ function toMarkdown(){
   if(!pendingList.length)md+='_Nenhum item pendente._\n\n';
   pendingList.forEach(p=>{
     const blocked=pendingBlockedItems(p);
-    md+=`- **${p.title}** \`[${p.urgency}]\` — ${p.status==='resolved'?'resolvido':'aberto'} · responsável: ${p.responsible||'—'}\n`;
+    md+=`- **${p.title}** \`[${p.urgency}]\` — ${p.status==='resolved'?'resolvido':'aberto'} · responsável: ${(p.responsible&&p.responsible.length)?p.responsible.join(', '):'—'}\n`;
     if(p.description)md+=`  ${p.description}\n`;
     if(blocked.length)md+=`  - bloqueia: ${blocked.map(it=>(it.text||'(sem texto)').slice(0,60)).join(', ')}\n`;
   });
@@ -1746,8 +1902,23 @@ function normalize(o){
       delete i.notes;
     }
     if(i.sprintId===undefined)i.sprintId=null;
+    if(i.sprintOrder===undefined)i.sprintOrder=null;
     if(i.estimatedHours===undefined)i.estimatedHours=null;
   });});
+  {
+    const bySprint={};
+    (o.sections||[]).forEach(s=>(s.items||[]).forEach(i=>{
+      if(i.sprintId){(bySprint[i.sprintId]=bySprint[i.sprintId]||[]).push(i);}
+    }));
+    Object.values(bySprint).forEach(arr=>{
+      const withOrder=arr.filter(i=>i.sprintOrder!=null);
+      const withoutOrder=arr.filter(i=>i.sprintOrder==null);
+      if(withoutOrder.length){
+        let next=withOrder.length?Math.max(...withOrder.map(i=>i.sprintOrder))+1:0;
+        withoutOrder.forEach(i=>{i.sprintOrder=next++;});
+      }
+    });
+  }
   if(o.abas)delete o.abas;
   if(o.sheetMappingDoc===undefined)o.sheetMappingDoc=DEFAULT_STATE.sheetMappingDoc;
   if(!Array.isArray(o.sprints))o.sprints=[];
@@ -1767,7 +1938,8 @@ function normalize(o){
   o.pendingItems.forEach(p=>{
     p.id=p.id||uid();delete p.origin;
     p.status=p.status||'open';p.createdAt=p.createdAt||new Date(0).toISOString();p.urgency=p.urgency||'media';
-    p.responsible=p.responsible||'';
+    if(Array.isArray(p.responsible))p.responsible=p.responsible.filter(r=>r&&r.trim());
+    else p.responsible=(p.responsible&&p.responsible.trim())?[p.responsible.trim()]:[];
   });
   (o.sections||[]).forEach(s=>(s.items||[]).forEach(i=>{
     i.blockedBy=(i.blockedBy||[]).filter(id=>o.pendingItems.some(p=>p.id===id));
