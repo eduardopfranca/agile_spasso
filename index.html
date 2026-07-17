@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Documento de Desenvolvimento do Aplicativo</title>
+<title>Agile Mesa Spasso</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <style>
@@ -21,8 +21,8 @@
   .titleInput:focus,.subInput:focus{outline:2px solid var(--accent);background:#fff}
 
   .header{position:sticky;top:0;z-index:21;background:var(--bg)}
-  .tabs{display:flex;gap:4px;margin:8px 0 0}
-  .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:#f1ede7;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px}
+  .tabs{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 0}
+  .tab{padding:8px 16px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:#f1ede7;color:var(--muted);font-weight:700;cursor:pointer;font-size:14px;white-space:nowrap;flex:none}
   .tab.active{background:var(--panel);color:var(--ink)}
   .diagram{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-weight:600;color:#3d3a35;line-height:1.7;margin-bottom:12px;font-size:14px}
   .diagram .arrow{color:var(--accent);padding:0 4px;font-weight:700}
@@ -107,11 +107,13 @@
   body:not([data-view="mapa"]) #view-mapa{display:none}
   body:not([data-view="pending"]) #view-pending{display:none}
   body:not([data-view="notas"]) #view-notas{display:none}
+  body:not([data-view="licoes"]) #view-licoes{display:none}
   body:not([data-view="retro"]) #view-retro{display:none}
   body:not([data-view="backlog"]) #addSection{display:none}
   body:not([data-view="backlog"]) #filterBang{display:none}
   body:not([data-view="sprints"]) #addSprint{display:none}
   body:not([data-view="marcos"]) #addMarco{display:none}
+  body:not([data-view="licoes"]) #addMeeting{display:none}
   body:not([data-view="pending"]) #addPendingItem{display:none}
   body:not([data-view="pending"]) #filterPending{display:none}
   body:not([data-view="pending"]) #filterUrgency{display:none}
@@ -228,6 +230,16 @@
   .notesAddRow{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
   .noteRow{margin-bottom:8px}
   .noteAddress{color:var(--accent-ink);font-weight:700}
+
+  /* meetings (lições/decisões) */
+  .meetingCard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+  .meetingHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .meetingBody{display:none;margin-top:10px}
+  .meetingCard.expanded .meetingBody{display:block}
+  .meetingBlock{margin-top:14px}
+  .meetingBlock:first-child{margin-top:0}
+  .meetingBlockHead{font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:4px}
+  .meetingBlockHint{font-weight:600;color:var(--muted);font-size:12px}
 </style>
 
 <div class="wrap">
@@ -241,6 +253,7 @@
       <button class="tb primary" id="addSection">+ Seção</button>
       <button class="tb primary" id="addSprint">+ Sprint</button>
       <button class="tb primary" id="addMarco">+ Marco</button>
+      <button class="tb primary" id="addMeeting">+ Reunião</button>
       <button class="tb primary" id="addPendingItem">+ Novo item pendente</button>
       <button class="tb bangfilter" id="filterBang">❗ Só pendências externas (0)</button>
       <button class="tb" id="filterPending">Mostrar apenas abertas</button>
@@ -315,6 +328,11 @@
     <div id="notasList"></div>
   </div>
 
+  <div id="view-licoes">
+    <div class="hint">Reuniões semanais (sexta-feira: Edu, Marcel, Maely). A mais recente aparece expandida.</div>
+    <div id="licoesList"></div>
+  </div>
+
   <div id="view-retro">
     <div id="retroList"></div>
   </div>
@@ -335,6 +353,7 @@ const VIEWS=[
   {id:'mapa',label:'Mapa da Planilha'},
   {id:'pending',label:'Itens Pendentes'},
   {id:'notas',label:'Notas'},
+  {id:'licoes',label:'Lições/Decisões'},
   {id:'retro',label:'Retrospectivas'}
 ];
 
@@ -352,9 +371,9 @@ const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&g
 const el=id=>document.getElementById(id);
 
 /* ---------- default data ---------- */
-function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],confirm:!!a[1],progressType:null,done:false,subtasks:[],percent:0,text:a[2],sprintId:null,pendingResolved:false,urgency:'media'}));}
+function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],confirm:!!a[1],progressType:'check',done:false,subtasks:[],percent:0,text:a[2],sprintId:null,pendingResolved:false,urgency:'media'}));}
 const DEFAULT_STATE={
-  docTitle:'Documento de Desenvolvimento do Aplicativo',docSub:'Spasso',activeView:'sprints',
+  docTitle:'Agile Mesa Spasso',docSub:'Spasso',activeView:'sprints',
   footNote:'A sequência das seções reflete a dependência lógica entre as frentes, não a ordem de execução. No planejamento de sprints, frentes independentes — como Precificação e Fundação — podem avançar em paralelo.',
   sections:[
     {id:'sec-precificacao',title:'Precificação',subtitle:'Geração de preços — módulo independente, de valor imediato',
@@ -398,7 +417,8 @@ const DEFAULT_STATE={
     {id:uid(),title:'Histórico diário de MTM',description:'Substitui a aba Evolução_MTM.',completed:false,sprintId:null},
     {id:uid(),title:'Caixa, variação cambial e fluxo de caixa',description:'Substitui as abas Caixa_Corretoras, Var_Cambial e Fluxo_Caixa.',completed:false,sprintId:null},
     {id:uid(),title:'Gestão de margem e stress',description:'Substitui a aba Gestão_Stonex.',completed:false,sprintId:null}
-  ]
+  ],
+  meetings:[]
 };
 
 let state, sortables=[], docVersion=0;
@@ -741,6 +761,102 @@ function addNoteToMilestone(mid,inp,root){
   if(again)again.focus();
 }
 
+/* ---------- meetings (lições/decisões) render ---------- */
+let expandedMeetings=new Set();
+const MEETING_BLOCKS=['lessons','decisions','observations'];
+const MEETING_BLOCK_LABELS={lessons:'Lições',decisions:'Decisões',observations:'Observações'};
+const MEETING_BLOCK_HINTS={lessons:'o que aprendemos na semana que passou',decisions:'o que decidimos para a próxima',observations:'qualquer outra coisa relevante'};
+function findMeetingEntry(entryId){
+  for(const mt of state.meetings){
+    for(const kind of MEETING_BLOCKS){
+      const entry=mt[kind].find(x=>x.id===entryId);
+      if(entry)return{meeting:mt,kind,entry};
+    }
+  }
+  return null;
+}
+function meetingEntryActionsHTML(entry){
+  const mine=entry.author===author;
+  return mine?`<div class="noteActions"><button data-role="editMeetingEntry" data-id="${entry.id}">editar</button><button class="noteDelBtn" data-role="delMeetingEntry" data-id="${entry.id}">remover</button></div>`:'';
+}
+function meetingEntryHTML(entry){
+  return `<div class="noteEntry" data-entry-id="${entry.id}">
+    <span class="noteMeta">${esc(entry.author)} · ${formatNoteTs(entry.ts)}</span>
+    <span class="noteText" data-role="meetingEntryTextDisplay" data-id="${entry.id}">${esc(entry.text)}</span>
+    ${meetingEntryActionsHTML(entry)}
+  </div>`;
+}
+function meetingBlockHTML(mt,kind){
+  const entries=mt[kind];
+  return `<div class="meetingBlock">
+    <div class="meetingBlockHead">${MEETING_BLOCK_LABELS[kind]} <span class="meetingBlockHint">— ${MEETING_BLOCK_HINTS[kind]}</span></div>
+    <div class="noteList">${entries.map(meetingEntryHTML).join('')}</div>
+    <div class="noteAddRow">
+      <input class="noteInput" data-role="meetingEntryInput" data-kind="${kind}" placeholder="adicionar…">
+      <button class="noteAddBtn" data-role="addMeetingEntry" data-kind="${kind}">+</button>
+    </div>
+  </div>`;
+}
+function meetingHTML(mt){
+  const expanded=expandedMeetings.has(mt.id);
+  return `<div class="meetingCard ${expanded?'expanded':''}" data-mtid="${mt.id}">
+    <div class="meetingHead">
+      <button class="sprintToggleBtn" data-role="meetingToggle" title="${expanded?'Recolher':'Expandir'}">${expanded?'▾':'▸'}</button>
+      <input class="milestoneTitle" data-role="meetingTitle" value="${esc(mt.title)}" placeholder="título da reunião">
+      <input class="sprintDate" type="date" data-role="meetingDate" value="${esc(mt.date)}">
+      <button class="itemDel" data-role="delMeeting" title="Remover reunião">✕</button>
+    </div>
+    <div class="meetingBody">
+      ${MEETING_BLOCKS.map(kind=>meetingBlockHTML(mt,kind)).join('')}
+    </div>
+  </div>`;
+}
+function renderMeetings(){
+  const sorted=[...state.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  el('licoesList').innerHTML=sorted.map(meetingHTML).join('')||'<div class="hint">Nenhuma reunião registrada.</div>';
+}
+function addMeetingEntry(meetingId,kind,inp,root){
+  const v=(inp.value||'').trim();if(!v)return;
+  const mt=state.meetings.find(x=>x.id===meetingId);if(!mt)return;
+  mt[kind].push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v});
+  renderMeetings();save();
+  const scope=root||document;
+  const again=scope.querySelector(`.meetingCard[data-mtid="${meetingId}"] [data-role="meetingEntryInput"][data-kind="${kind}"]`);
+  if(again)again.focus();
+}
+function startEditMeetingEntry(id,root){
+  const scope=root||document;
+  const span=scope.querySelector(`[data-role="meetingEntryTextDisplay"][data-id="${id}"]`);
+  if(!span)return;
+  const found=findMeetingEntry(id);if(!found)return;
+  const entry=found.entry;
+  const input=document.createElement('input');
+  input.className='noteEditInput';
+  input.value=entry.text;
+  input.dataset.role='meetingEntryEditInput';
+  input.dataset.id=id;
+  span.replaceWith(input);
+  input.focus();input.select();
+  const commit=()=>{const v=(input.value||'').trim();if(v)entry.text=v;renderMeetings();save();};
+  input.addEventListener('blur',commit,{once:true});
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();input.blur();}});
+}
+function handleMeetingEntryClick(e){
+  const r=e.target.dataset.role;
+  const root=e.currentTarget;
+  if(r==='editMeetingEntry'){startEditMeetingEntry(e.target.dataset.id,root);return true;}
+  if(r==='delMeetingEntry'){
+    const id=e.target.dataset.id;
+    const found=findMeetingEntry(id);if(!found)return true;
+    if(confirm('Remover esta entrada?')){
+      found.meeting[found.kind]=found.meeting[found.kind].filter(x=>x.id!==id);
+      renderMeetings();save();
+    }
+    return true;
+  }
+  return false;
+}
+
 /* ---------- pending items render ---------- */
 function mostRecentTs(it){return extractIdTs(it.id);}
 const URGENCY_RANK={alta:3,media:2,baixa:1};
@@ -901,7 +1017,7 @@ function renderRetro(){
   el('retroList').innerHTML=retroCache.map((f,i)=>retroEntryHTML(f,i)).join('')||'<div class="hint">Nenhuma retrospectiva encontrada.</div>';
 }
 
-function renderAll(){renderBacklog();renderSheetDoc();renderSprints();renderMarcos();renderPending();renderNotas();}
+function renderAll(){renderBacklog();renderSheetDoc();renderSprints();renderMarcos();renderPending();renderNotas();renderMeetings();}
 
 function autosize(e){if(!e)return;e.style.height='auto';e.style.height=e.scrollHeight+'px';}
 function autosizeAll(){document.querySelectorAll('.secIntro,.itemText,#footNote').forEach(autosize);}
@@ -976,7 +1092,7 @@ function handleItemClick(e){
   if(r==='setProgressType'){it.progressType=e.target.dataset.type;renderAll();save();return true;}
   if(r==='addSubtask'){
     it.subtasks.push({id:uid(),text:'',done:false});renderAll();save();
-    const row=root.querySelector(`[data-iid="${it.id}"] .subtasksBlock .subtaskRow:last-child .subtaskText`);
+    const row=root.querySelector(`[data-iid="${it.id}"] .subtasksBlock .subtaskRow:last-of-type .subtaskText`);
     if(row)row.focus();
     return true;
   }
@@ -1177,6 +1293,44 @@ MC.addEventListener('keydown',e=>{
   }
 });
 
+/* ---------- meetings events ---------- */
+const LC=el('licoesList');
+LC.addEventListener('input',e=>{
+  const r=e.target.dataset.role;
+  const card=e.target.closest('.meetingCard');if(!card)return;
+  const mt=state.meetings.find(x=>x.id===card.dataset.mtid);if(!mt)return;
+  if(r==='meetingTitle'){mt.title=e.target.value;save();}
+});
+LC.addEventListener('change',e=>{
+  const r=e.target.dataset.role;
+  const card=e.target.closest('.meetingCard');if(!card)return;
+  const mt=state.meetings.find(x=>x.id===card.dataset.mtid);if(!mt)return;
+  if(r==='meetingDate'){mt.date=e.target.value;renderMeetings();save();}
+});
+LC.addEventListener('click',e=>{
+  if(handleMeetingEntryClick(e))return;
+  const r=e.target.dataset.role;if(!r)return;
+  const card=e.target.closest('.meetingCard');if(!card)return;
+  const mt=state.meetings.find(x=>x.id===card.dataset.mtid);if(!mt)return;
+  if(r==='meetingToggle'){if(expandedMeetings.has(mt.id))expandedMeetings.delete(mt.id);else expandedMeetings.add(mt.id);renderMeetings();}
+  else if(r==='delMeeting'){
+    if(confirm(`Remover a reunião "${mt.title||mt.date||'sem título'}"?`)){
+      state.meetings=state.meetings.filter(x=>x.id!==mt.id);renderMeetings();save();
+    }
+  }else if(r==='addMeetingEntry'){
+    const kind=e.target.dataset.kind;
+    const inp=card.querySelector(`[data-role="meetingEntryInput"][data-kind="${kind}"]`);
+    if(inp)addMeetingEntry(mt.id,kind,inp,e.currentTarget);
+  }
+});
+LC.addEventListener('keydown',e=>{
+  if(e.target.dataset.role==='meetingEntryInput'&&e.key==='Enter'){
+    e.preventDefault();
+    const card=e.target.closest('.meetingCard');if(!card)return;
+    addMeetingEntry(card.dataset.mtid,e.target.dataset.kind,e.target,e.currentTarget);
+  }
+});
+
 /* ---------- pending items events ---------- */
 const PD=el('pendingList');
 PD.addEventListener('input',e=>{
@@ -1255,7 +1409,8 @@ el('tabs').addEventListener('click',e=>{
 });
 
 /* ---------- header / footer ---------- */
-el('docTitle').addEventListener('input',e=>{state.docTitle=e.target.value;save();});
+function updateDocumentTitle(){document.title=(state.docTitle&&state.docTitle.trim())||'Agile Mesa Spasso';}
+el('docTitle').addEventListener('input',e=>{state.docTitle=e.target.value;updateDocumentTitle();save();});
 el('docSub').addEventListener('input',e=>{state.docSub=e.target.value;save();});
 el('footNote').addEventListener('input',e=>{state.footNote=e.target.value;autosize(e.target);save();});
 
@@ -1283,6 +1438,13 @@ el('addMarco').addEventListener('click',()=>{
   const t=document.querySelector(`.milestoneCard[data-mid="${m.id}"] .milestoneTitle`);
   if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
 });
+el('addMeeting').addEventListener('click',()=>{
+  const today=new Date().toISOString().slice(0,10);
+  const mt={id:uid(),title:'',date:today,lessons:[],decisions:[],observations:[]};
+  state.meetings.push(mt);expandedMeetings.add(mt.id);renderMeetings();save();
+  const t=document.querySelector(`.meetingCard[data-mtid="${mt.id}"] .milestoneTitle`);
+  if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
+});
 el('addPendingItem').addEventListener('click',()=>{
   const p={id:uid(),origin:'standalone',title:'Novo item pendente',description:'',author:ensureAuthor(),createdAt:new Date().toISOString(),status:'open',urgency:'media'};
   state.pendingItems.push(p);renderPending();save();
@@ -1306,6 +1468,24 @@ function toMarkdown(){
   let md=`# ${state.docTitle}\n**${state.docSub}**\n\n`;
   md+=`**${flow}**\n\n`;
   md+='**Legenda:** `[E]` existente · `[A]` a adaptar · `[N]` novo · `[P]` processo · `(!)` pendência externa · `[x]` concluído.\n\n';
+
+  md+=`## Sprints\n\n`;
+  if(!state.sprints.length)md+='_Nenhum sprint criado._\n\n';
+  [...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||'')).forEach(sp=>{
+    const items=assignedItems(sp.id);
+    const total=items.length,done=items.filter(it=>itemProgress(it)===100).length;
+    const avg=total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0;
+    md+=`### ${sprintLabel(sp)}\n`;
+    md+=`Status: \`${sp.status}\` · ${sp.start||'—'} a ${sp.end||'—'} · progresso: ${done}/${total} concluídos · ${avg}%\n\n`;
+    if(sp.goal)md+=`${sp.goal}\n\n`;
+    if(items.length){
+      items.forEach(it=>{md+=`- ${itemProgress(it)===100?'[x] ':'[ ] '}${it.text}\n`;});
+      md+='\n';
+    }
+    const spNotes=sprintNotes(sp);
+    if(spNotes.length){spNotes.forEach(n=>{md+=`> _nota (${n.author}): ${n.text.replace(/\n/g,' ')}_\n`;});md+='\n';}
+  });
+
   md+=`## Backlog\n\n`;
   state.sections.forEach((s,i)=>{
     md+=`### ${i+1}. ${s.title}\n`;if(s.subtitle)md+=`*${s.subtitle}*\n`;if(s.intro)md+=`\n${s.intro}\n`;
@@ -1322,7 +1502,50 @@ function toMarkdown(){
     md+='\n';
   });
   md+=`---\n\n**Nota sobre a ordem.** ${state.footNote}\n\n`;
+
+  md+=`## Marcos\n\n`;
+  if(!state.milestones.length)md+='_Nenhum marco cadastrado._\n\n';
+  state.milestones.forEach(m=>{
+    md+=`- ${m.completed?'[x]':'[ ]'} **${m.title||'(sem título)'}**`;
+    if(m.sprintId){const sp=state.sprints.find(x=>x.id===m.sprintId);if(sp)md+=` _(${sprintLabel(sp)})_`;}
+    md+='\n';
+    if(m.description)md+=`  ${m.description}\n`;
+    const mNotes=milestoneNotes(m);
+    if(mNotes.length)mNotes.forEach(n=>{md+=`  - _nota (${n.author}): ${n.text.replace(/\n/g,' ')}_\n`;});
+  });
+  md+='\n';
+
   md+=`## Mapa da Planilha\n\n${state.sheetMappingDoc||''}\n\n`;
+  const docNts=docNotes();
+  if(docNts.length){
+    md+='**Notas sobre o mapeamento:**\n\n';
+    docNts.forEach(n=>{md+=`- _nota (${n.author}): ${n.text.replace(/\n/g,' ')}_\n`;});
+    md+='\n';
+  }
+
+  md+=`## Itens Pendentes\n\n`;
+  const pendingList=buildPendingList();
+  if(!pendingList.length)md+='_Nenhum item pendente._\n\n';
+  pendingList.forEach(p=>{
+    const origin=p.kind==='backlog'?`Backlog · ${p.sectionTitle}`:'Adicionado diretamente';
+    md+=`- **${p.title}** \`[${p.urgency}]\` — ${p.resolved?'resolvido':'aberto'} _(${origin})_\n`;
+    if(p.kind==='standalone'&&p.description)md+=`  ${p.description}\n`;
+  });
+  md+='\n';
+
+  md+=`## Lições/Decisões\n\n`;
+  if(!state.meetings.length)md+='_Nenhuma reunião registrada._\n\n';
+  [...state.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(mt=>{
+    md+=`### ${mt.title||'Reunião'} — ${mt.date||'sem data'}\n\n`;
+    MEETING_BLOCKS.forEach(kind=>{
+      const entries=mt[kind];
+      md+=`**${MEETING_BLOCK_LABELS[kind]}**\n`;
+      if(!entries.length)md+='- _nada registrado_\n';
+      else entries.forEach(e=>{md+=`- ${e.text} _(${e.author})_\n`;});
+      md+='\n';
+    });
+  });
+
   return md;
 }
 
@@ -1366,13 +1589,27 @@ function normalize(o){
   o.pendingItems.forEach(p=>{p.id=p.id||uid();p.origin='standalone';p.status=p.status||'open';p.createdAt=p.createdAt||new Date(0).toISOString();p.urgency=p.urgency||'media';});
   if(!Array.isArray(o.milestones))o.milestones=JSON.parse(JSON.stringify(DEFAULT_STATE.milestones));
   o.milestones.forEach(m=>{m.id=m.id||uid();m.title=m.title||'';m.description=m.description||'';m.completed=!!m.completed;if(m.sprintId===undefined)m.sprintId=null;});
+  if(!Array.isArray(o.meetings))o.meetings=[];
+  o.meetings.forEach(mt=>{
+    mt.id=mt.id||uid();mt.title=mt.title||'';mt.date=mt.date||'';
+    MEETING_BLOCKS.forEach(kind=>{
+      if(!Array.isArray(mt[kind]))mt[kind]=[];
+      mt[kind].forEach(e=>{e.id=e.id||uid();e.author=e.author||'—';e.ts=e.ts||new Date(0).toISOString();});
+    });
+  });
 }
 function boot(){
   el('docTitle').value=state.docTitle||'';el('docSub').value=state.docSub||'';
+  updateDocumentTitle();
   expandedSprints=new Set(state.sprints.filter(s=>s.status==='active').map(s=>s.id));
   if(expandedSprints.size===0&&state.sprints.length>0){
     const earliest=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''))[0];
     expandedSprints.add(earliest.id);
+  }
+  expandedMeetings=new Set();
+  if(state.meetings.length>0){
+    const mostRecent=[...state.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+    expandedMeetings.add(mostRecent.id);
   }
   setView(state.activeView||'sprints');
   renderAll();autosize(el('footNote'));
