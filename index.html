@@ -324,6 +324,7 @@
         <option value="backlog">Backlog</option>
         <option value="sprint">Sprint</option>
         <option value="milestone">Marco</option>
+        <option value="pending">Item pendente</option>
         <option value="doc">Documento</option>
         <option value="note">Nota (respostas)</option>
       </select>
@@ -518,6 +519,7 @@ function noteTargetLabel(target){
   if(target.type==='note'){const n=state.notes.find(x=>x.id===target.id);return n?`resposta a nota de ${n.author}`:(target.label||'(nota removida)');}
   if(target.type==='sprint'){const sp=state.sprints.find(x=>x.id===target.id);return sp?sprintLabel(sp):(target.label||'(sprint removido)');}
   if(target.type==='milestone'){const m=state.milestones.find(x=>x.id===target.id);return m?(m.title||'(marco sem título)'):(target.label||'(marco removido)');}
+  if(target.type==='pending'){const p=state.pendingItems.find(x=>x.id===target.id);return p?(p.title||'(item pendente sem título)'):(target.label||'(item pendente removido)');}
   if(target.type==='doc')return 'Mapa da Planilha';
   return target.label||'(destino)';
 }
@@ -1033,6 +1035,16 @@ function pendingBlockedItems(p){
   state.sections.forEach(sec=>sec.items.forEach(it=>{if((it.blockedBy||[]).includes(p.id))out.push(it);}));
   return out;
 }
+function pendingNotes(p){return state.notes.filter(n=>n.target&&n.target.type==='pending'&&n.target.id===p.id);}
+function addNoteToPending(pid,inp,root){
+  const v=(inp.value||'').trim();if(!v)return;
+  const p=state.pendingItems.find(x=>x.id===pid);
+  state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text:v,target:{type:'pending',id:pid,label:(p&&p.title)||''}});
+  renderAll();save();
+  const scope=root||document;
+  const again=scope.querySelector(`.pendingCard[data-id="${pid}"] [data-role="pendingNoteInput"]`);
+  if(again)again.focus();
+}
 function buildPendingList(){
   return [...state.pendingItems];
 }
@@ -1063,6 +1075,13 @@ function pendingHTML(p){
     </div>
     <div class="pendingAuthor">por ${esc(p.author||'')}</div>
     ${blocked.length?`<div class="pendingBlocks"><span class="pendingBlocksLabel">Bloqueia:</span>${blocked.map(it=>`<button class="pendingOriginBadge clickable" data-role="gotoBacklog" data-node-id="${it.id}">${esc((it.text||'(sem texto)').slice(0,40))}</button>`).join('')}</div>`:''}
+    <div class="docNotes">
+      <div class="noteList">${noteListHTML(pendingNotes(p))}</div>
+      <div class="noteAddRow">
+        <input class="noteInput" data-role="pendingNoteInput" data-id="${p.id}" placeholder="adicionar nota sobre este item pendente…">
+        <button class="noteAddBtn" data-role="addPendingNote" data-id="${p.id}">+</button>
+      </div>
+    </div>
     <div class="pendingActions">
       <button class="tb" data-role="togglePendingResolved" data-id="${p.id}">${resolved?'Reabrir':'Resolver'}</button>
       <button class="itemDel" data-role="delPendingItem" data-id="${p.id}" title="Remover">✕</button>
@@ -1131,6 +1150,11 @@ function notesTargetOptions(){
     state.milestones.forEach(m=>{o+=`<option value="milestone:${m.id}">${esc(m.title||'(marco sem título)')}</option>`;});
     o+='</optgroup>';
   }
+  if(state.pendingItems.length){
+    o+='<optgroup label="Itens Pendentes">';
+    state.pendingItems.forEach(p=>{o+=`<option value="pending:${p.id}">${esc(p.title||'(item pendente sem título)')}</option>`;});
+    o+='</optgroup>';
+  }
   o+='<optgroup label="Documento"><option value="doc:sheet-mapping-doc">Mapa da Planilha</option></optgroup>';
   return o;
 }
@@ -1173,6 +1197,7 @@ function addNoteFromNotasTab(){
   else if(type==='section'){const s=getSection(id);label=s?(s.title||''):'';}
   else if(type==='sprint'){const sp=state.sprints.find(x=>x.id===id);label=sprintLabel(sp);}
   else if(type==='milestone'){const m=state.milestones.find(x=>x.id===id);label=m?(m.title||''):'';}
+  else if(type==='pending'){const p=state.pendingItems.find(x=>x.id===id);label=p?(p.title||''):'';}
   else if(type==='doc'){label='Mapa da Planilha';}
   state.notes.push({id:uid(),author:ensureAuthor(),ts:new Date().toISOString(),text,target:{type,id,label}});
   inp.value='';
@@ -1633,6 +1658,7 @@ PD.addEventListener('change',e=>{
   }
 });
 PD.addEventListener('click',e=>{
+  if(handleNoteClick(e))return;
   const r=e.target.dataset.role;if(!r)return;
   const id=e.target.dataset.id;
   if(r==='togglePendingResolved'){
@@ -1642,9 +1668,13 @@ PD.addEventListener('click',e=>{
   }else if(r==='delPendingItem'){
     if(confirm('Remover este item pendente? Isso também remove o vínculo com quaisquer itens do Backlog que ele bloqueia.')){
       state.sections.forEach(sec=>sec.items.forEach(it=>{it.blockedBy=(it.blockedBy||[]).filter(x=>x!==id);}));
+      state.notes=state.notes.filter(n=>!(n.target&&n.target.type==='pending'&&n.target.id===id));
       state.pendingItems=state.pendingItems.filter(x=>x.id!==id);
       renderAll();save();
     }
+  }else if(r==='addPendingNote'){
+    const inp=e.target.closest('.pendingCard').querySelector('[data-role="pendingNoteInput"]');
+    if(inp)addNoteToPending(id,inp,e.currentTarget);
   }else if(r==='gotoBacklog'){
     const iid=e.target.dataset.nodeId;setView('backlog');renderAll();
     setTimeout(()=>{const node=document.querySelector(`[data-iid="${iid}"]`);if(node){node.scrollIntoView({behavior:'smooth',block:'center'});node.classList.add('showBlockers');}},0);
@@ -1670,7 +1700,13 @@ PD.addEventListener('keydown',e=>{
     const btn=document.querySelector(`.pendingCard[data-id="${id}"] [data-role="addResponsible"]`);
     if(btn)btn.click();
   }
+  if(e.target.dataset.role==='pendingNoteInput'&&e.key==='Enter'){
+    e.preventDefault();
+    const card=e.target.closest('.pendingCard');if(!card)return;
+    addNoteToPending(card.dataset.id,e.target,e.currentTarget);
+  }
 });
+PD.addEventListener('keydown',handleNoteKeydown);
 
 /* ---------- notas events ---------- */
 const NT=el('notasList');
@@ -1873,6 +1909,8 @@ function toMarkdown(){
     md+=`- **${p.title}** \`[${p.urgency}]\` — ${p.status==='resolved'?'resolvido':'aberto'} · responsável: ${(p.responsible&&p.responsible.length)?p.responsible.join(', '):'—'}\n`;
     if(p.description)md+=`  ${p.description}\n`;
     if(blocked.length)md+=`  - bloqueia: ${blocked.map(it=>(it.text||'(sem texto)').slice(0,60)).join(', ')}\n`;
+    const pNotes=pendingNotes(p);
+    if(pNotes.length)pNotes.forEach(n=>{md+=`  - _nota (${n.author}): ${n.text.replace(/\n/g,' ')}_\n`;});
   });
   md+='\n';
 
