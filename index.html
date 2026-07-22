@@ -288,6 +288,8 @@
   .meetingBlock:first-child{margin-top:0}
   .meetingBlockHead{font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:4px}
   .meetingBlockHint{font-weight:600;color:var(--muted);font-size:12px}
+  .agendaEntryRow{display:flex;align-items:flex-start;gap:6px}
+  .noteText.done{color:var(--muted);text-decoration:line-through}
 </style>
 
 <div class="wrap">
@@ -396,7 +398,7 @@
   </div>
 
   <div id="view-licoes">
-    <div class="hint">Reuniões semanais (sexta-feira: Edu, Marcel, Maely). A mais recente aparece expandida.</div>
+    <div class="hint">Reuniões semanais (sexta-feira: Edu, Marcel, Maely). A próxima reunião futura aparece expandida por padrão; sem uma futura, mostra a mais recente.</div>
     <div id="licoesList"></div>
   </div>
 
@@ -419,7 +421,7 @@ const VIEWS=[
   {id:'mapa',label:'Mapa da Planilha'},
   {id:'pending',label:'Itens Pendentes'},
   {id:'notas',label:'Notas'},
-  {id:'licoes',label:'Lições/Decisões'},
+  {id:'licoes',label:'Reuniões'},
   {id:'retro',label:'Retrospectivas'}
 ];
 
@@ -932,9 +934,9 @@ function addNoteToMilestone(mid,inp,root){
 
 /* ---------- meetings (lições/decisões) render ---------- */
 let expandedMeetings=new Set();
-const MEETING_BLOCKS=['lessons','decisions','observations'];
-const MEETING_BLOCK_LABELS={lessons:'Lições',decisions:'Decisões',observations:'Observações'};
-const MEETING_BLOCK_HINTS={lessons:'o que aprendemos na semana que passou',decisions:'o que decidimos para a próxima',observations:'qualquer outra coisa relevante'};
+const MEETING_BLOCKS=['agenda','lessons','decisions','observations'];
+const MEETING_BLOCK_LABELS={agenda:'Pauta',lessons:'Lições',decisions:'Decisões',observations:'Observações'};
+const MEETING_BLOCK_HINTS={agenda:'o que precisa ser discutido',lessons:'o que aprendemos na semana que passou',decisions:'o que decidimos para a próxima',observations:'qualquer outra coisa relevante'};
 function findMeetingEntry(entryId){
   for(const mt of state.meetings){
     for(const kind of MEETING_BLOCKS){
@@ -948,7 +950,17 @@ function meetingEntryActionsHTML(entry){
   const mine=entry.author===author;
   return mine?`<div class="noteActions"><button data-role="editMeetingEntry" data-id="${entry.id}">editar</button><button class="noteDelBtn" data-role="delMeetingEntry" data-id="${entry.id}">remover</button></div>`:'';
 }
-function meetingEntryHTML(entry){
+function meetingEntryHTML(entry,kind){
+  if(kind==='agenda'){
+    return `<div class="noteEntry agendaEntry" data-entry-id="${entry.id}">
+      <span class="noteMeta">${esc(entry.author)} · ${formatNoteTs(entry.ts)}</span>
+      <div class="agendaEntryRow">
+        <input type="checkbox" class="subtaskDone" data-role="agendaEntryDone" data-id="${entry.id}" ${entry.done?'checked':''}>
+        <span class="noteText ${entry.done?'done':''}" data-role="meetingEntryTextDisplay" data-id="${entry.id}">${esc(entry.text)}</span>
+      </div>
+      ${meetingEntryActionsHTML(entry)}
+    </div>`;
+  }
   return `<div class="noteEntry" data-entry-id="${entry.id}">
     <span class="noteMeta">${esc(entry.author)} · ${formatNoteTs(entry.ts)}</span>
     <span class="noteText" data-role="meetingEntryTextDisplay" data-id="${entry.id}">${esc(entry.text)}</span>
@@ -959,7 +971,7 @@ function meetingBlockHTML(mt,kind){
   const entries=mt[kind];
   return `<div class="meetingBlock">
     <div class="meetingBlockHead">${MEETING_BLOCK_LABELS[kind]} <span class="meetingBlockHint">— ${MEETING_BLOCK_HINTS[kind]}</span></div>
-    <div class="noteList">${entries.map(meetingEntryHTML).join('')}</div>
+    <div class="noteList">${entries.map(e=>meetingEntryHTML(e,kind)).join('')}</div>
     <div class="noteAddRow">
       <input class="noteInput" data-role="meetingEntryInput" data-kind="${kind}" placeholder="adicionar…">
       <button class="noteAddBtn" data-role="addMeetingEntry" data-kind="${kind}">+</button>
@@ -968,11 +980,14 @@ function meetingBlockHTML(mt,kind){
 }
 function meetingHTML(mt){
   const expanded=expandedMeetings.has(mt.id);
+  const today=new Date().toISOString().slice(0,10);
+  const isFuture=mt.date&&mt.date>=today;
   return `<div class="meetingCard ${expanded?'expanded':''}" data-mtid="${mt.id}">
     <div class="meetingHead">
       <button class="sprintToggleBtn" data-role="meetingToggle" title="${expanded?'Recolher':'Expandir'}">${expanded?'▾':'▸'}</button>
       <input class="milestoneTitle" data-role="meetingTitle" value="${esc(mt.title)}" placeholder="título da reunião">
       <input class="sprintDate" type="date" data-role="meetingDate" value="${esc(mt.date)}">
+      ${isFuture?'<span class="retroBadgeNew">próxima</span>':''}
       <button class="itemDel" data-role="delMeeting" title="Remover reunião">✕</button>
     </div>
     <div class="meetingBody">
@@ -1615,6 +1630,10 @@ LC.addEventListener('change',e=>{
   const card=e.target.closest('.meetingCard');if(!card)return;
   const mt=state.meetings.find(x=>x.id===card.dataset.mtid);if(!mt)return;
   if(r==='meetingDate'){mt.date=e.target.value;renderMeetings();save();}
+  else if(r==='agendaEntryDone'){
+    const entry=mt.agenda.find(x=>x.id===e.target.dataset.id);if(!entry)return;
+    entry.done=e.target.checked;renderMeetings();save();
+  }
 });
 LC.addEventListener('click',e=>{
   if(handleMeetingEntryClick(e))return;
@@ -1800,7 +1819,7 @@ el('addMarco').addEventListener('click',()=>{
 });
 el('addMeeting').addEventListener('click',()=>{
   const today=new Date().toISOString().slice(0,10);
-  const mt={id:uid(),title:'',date:today,lessons:[],decisions:[],observations:[]};
+  const mt={id:uid(),title:'',date:today,agenda:[],lessons:[],decisions:[],observations:[]};
   state.meetings.push(mt);expandedMeetings.add(mt.id);renderMeetings();save();
   const t=document.querySelector(`.meetingCard[data-mtid="${mt.id}"] .milestoneTitle`);
   if(t){t.focus();t.scrollIntoView({behavior:'smooth',block:'center'});}
@@ -1922,7 +1941,10 @@ function toMarkdown(){
       const entries=mt[kind];
       md+=`**${MEETING_BLOCK_LABELS[kind]}**\n`;
       if(!entries.length)md+='- _nada registrado_\n';
-      else entries.forEach(e=>{md+=`- ${e.text} _(${e.author})_\n`;});
+      else entries.forEach(e=>{
+        const prefix=kind==='agenda'?(e.done?'- [x] ':'- [ ] '):'- ';
+        md+=`${prefix}${e.text} _(${e.author})_\n`;
+      });
       md+='\n';
     });
   });
@@ -2005,7 +2027,7 @@ function normalize(o){
     mt.id=mt.id||uid();mt.title=mt.title||'';mt.date=mt.date||'';
     MEETING_BLOCKS.forEach(kind=>{
       if(!Array.isArray(mt[kind]))mt[kind]=[];
-      mt[kind].forEach(e=>{e.id=e.id||uid();e.author=e.author||'—';e.ts=e.ts||new Date(0).toISOString();});
+      mt[kind].forEach(e=>{e.id=e.id||uid();e.author=e.author||'—';e.ts=e.ts||new Date(0).toISOString();if(kind==='agenda'&&e.done===undefined)e.done=false;});
     });
   });
 }
@@ -2019,8 +2041,14 @@ function boot(){
   }
   expandedMeetings=new Set();
   if(state.meetings.length>0){
-    const mostRecent=[...state.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
-    expandedMeetings.add(mostRecent.id);
+    const today=new Date().toISOString().slice(0,10);
+    const future=state.meetings.filter(mt=>mt.date&&mt.date>=today).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    if(future.length){
+      expandedMeetings.add(future[0].id);
+    }else{
+      const mostRecent=[...state.meetings].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+      expandedMeetings.add(mostRecent.id);
+    }
   }
   setView(state.activeView||'sprints');
   renderAll();autosize(el('footNote'));
