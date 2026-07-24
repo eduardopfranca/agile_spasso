@@ -209,3 +209,35 @@ async function save() {
 - [x] Fase 2 — sprints
 - [x] Retrospectivas (adicional)
 - [ ] Fase 3 — não iniciada (por decisão consciente, não pendência)
+
+## Future: AI assistant (not scheduled)
+
+A chat panel inside the platform, able to answer questions about the document and,
+eventually, to mutate it. Recorded here as a design intention — no implementation planned.
+
+### Design constraints (agreed 2026-07-24)
+
+- **The API key never reaches the client.** A new Worker endpoint (`POST /ai`) holds the
+  Anthropic key as a secret, receives the question, attaches the current JSON document
+  (small enough to fit whole in context) and calls the API. `index.html` only talks to
+  the Worker.
+- **The endpoint requires authentication.** The platform has no login, so `/ai` would
+  otherwise be an open door to burning API credit. Minimum viable: a shared password,
+  configured as a Worker secret, requested when the user opens the AI panel and sent
+  with each `/ai` call. This authentication exists only for the AI feature; the rest of
+  the platform stays login-free.
+- **Read-only first.** Phase 1 answers questions ("what is today's priority in the
+  active sprint?") and writes nothing. Mutation via chat only ships if phase 1 proves
+  real usage.
+- **The model never writes the document.** If mutation is ever built, the model returns
+  structured commands (e.g. `{"op": "move_item", ...}`) that the app validates, previews
+  to the user for confirmation, and applies through the existing state-mutation paths
+  and `save()` — going through optimistic concurrency like any other edit. Same
+  dry-run → approve → apply pattern used by the 2026-07-24 document reconciliation script.
+
+### Deliberately out of scope
+
+Chat as a substitute for operations the UI already does well (moving a task is a drag).
+The value is reasoning over the document — prioritization, distribution of new backlog
+across sprints — not command entry. A zero-cost alternative remains available meanwhile:
+a "copy context" button exporting the document to the clipboard for use in any Claude.
