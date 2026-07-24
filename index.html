@@ -70,7 +70,7 @@
   .itemToggle{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 4px;flex:none;padding-top:6px}
   .itemToggle:hover{color:var(--accent-ink)}
   .itemProgressLabel{display:none;flex:none;font-size:12px;font-weight:700;color:var(--muted);padding-top:6px}
-  .item.collapsed .itemProgress,.item.collapsed .subtasksBlock,.item.collapsed .itemSprintRow,.item.collapsed .itemBlockersRow,.item.collapsed .noteToggle,.item.collapsed .typePicker,.item.collapsed .itemDel,.item.collapsed .blockersPanel{display:none}
+  .item.collapsed .itemProgress,.item.collapsed .subtasksBlock,.item.collapsed .itemSprintRow,.item.collapsed .itemBlockersRow,.item.collapsed .noteToggle,.item.collapsed .convertType,.item.collapsed .typePicker,.item.collapsed .itemDel,.item.collapsed .blockersPanel{display:none}
   .item.collapsed .itemProgressLabel{display:block}
   .item.collapsed .itemText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:1.7em!important;resize:none}
   input.done{width:17px;height:17px;flex:none;margin-top:5px;cursor:pointer;accent-color:var(--E)}
@@ -96,6 +96,8 @@
   .itemText:hover{background:#f4f1ec}.itemText:focus{outline:2px solid var(--accent);background:#fff}
   .noteToggle{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;padding:2px 4px;border-radius:5px}
   .noteToggle:hover{color:var(--accent-ink);background:#eef4f1}.noteToggle .dot{color:var(--accent)}
+  .convertType{background:none;border:none;color:#b3aca2;cursor:pointer;font-size:11.5px;font-weight:600;padding:2px 4px;border-radius:5px;margin-right:4px}
+  .convertType:hover{color:var(--accent-ink);background:#eef4f1}
   .note{width:100%;border:1px dashed var(--line);background:#fcfbf9;resize:none;padding:6px 8px;border-radius:7px;font-size:13px;line-height:1.5;overflow:hidden;color:#5a554d;margin-top:3px;display:none}
   .item.showNote .note{display:block}
   .item.collapsed .note{display:none}
@@ -321,6 +323,8 @@
 
   /* linha do tempo dos sprints */
   .ov-railcard{background:var(--ov-card);border:1px solid var(--ov-line);border-radius:12px;padding:18px 18px 12px;margin-bottom:22px;overflow-x:auto}
+  /* respiro para o rótulo de horas da barra mais alta, que sobe 20px acima da régua */
+  .ov-railcard .ov-h2{margin-bottom:30px}
   .ov-rail{display:grid;gap:8px;position:relative}
   .ov-sp{display:flex;flex-direction:column;min-width:0}
   .ov-bars{height:130px;display:flex;align-items:flex-end;justify-content:center;position:relative}
@@ -522,6 +526,11 @@ ensureAuthor();
 const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const el=id=>document.getElementById(id);
 
+/* ---------- datas (UTC, para não escorregar de dia por fuso) ---------- */
+const DAY_MS=86400000;
+function parseISODate(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null;}
+function toISODate(t){return new Date(t).toISOString().slice(0,10);}
+
 /* ---------- default data ---------- */
 function mkItems(arr){return arr.map(a=>({id:uid(),status:a[0],progressType:'check',done:false,subtasks:[],percent:0,text:a[2],sprintId:null,sprintOrder:null,blockedBy:[],estimatedHours:null}));}
 const DEFAULT_STATE={
@@ -716,6 +725,13 @@ function progressControlHTML(it,locked){
   if(it.progressType==='percent')return `<input type="number" class="percentInput" data-role="percent" min="0" max="100" value="${it.percent||0}" title="Progresso (%)">`;
   return '';
 }
+/* Única transição de progressType permitida depois de definido: 'check' → 'subtasks',
+   e só enquanto a tarefa não estiver concluída. */
+function canConvertToSubtasks(it){return !!it&&it.progressType==='check'&&!it.done;}
+function convertTypeHTML(it){
+  if(!canConvertToSubtasks(it))return '';
+  return `<button class="convertType" data-role="convertToSubtasks" title="Transformar em tarefa com subtarefas (não tem volta)">↳ virar tarefa com subtarefas</button>`;
+}
 function subtasksHTML(it){
   if(it.progressType!=='subtasks')return '';
   const rows=(it.subtasks||[]).map(st=>`<div class="subtaskRow" data-stid="${st.id}">
@@ -789,6 +805,7 @@ function itemHTML(it,opts){
       <div class="itemSprintRow">${sprintPickHTML(it,locked)}${sprintBadgeHTML(it)}</div>
       ${itemBlockersRowHTML(it)}
       ${blockersPanelHTML(it)}
+      ${convertTypeHTML(it)}
       <button class="noteToggle" data-role="noteToggle" ${locked?'disabled':''}>${hasNotes?'<span class="dot">●</span> notas ('+notes.length+')':'+ nota'}</button>
       <div class="note" data-role="noteBlock">
         <div class="noteList">${noteListHTML(notes)}</div>
@@ -906,6 +923,15 @@ function computeSprintNumber(newStart,excludeId){
   if(preceding===sorted[sorted.length-1])return String(maxInt+1);
   const allNumbers=sorted.map(s=>s.number).filter(Boolean);
   return nextLetterSuffix(preceding.number,allNumbers);
+}
+/* Próximo sprint: começa na segunda-feira seguinte ao maior `end` já existente,
+   mantendo o ritmo seg–sáb (end = start + 5 dias). Null quando não há data alguma. */
+function nextSprintStart(){
+  const ends=state.sprints.map(sp=>parseISODate(sp.end)!=null?parseISODate(sp.end):parseISODate(sp.start)).filter(t=>t!=null);
+  if(!ends.length)return null;
+  const last=Math.max(...ends);
+  const weekday=new Date(last).getUTCDay();
+  return last+(((8-weekday)%7)||7)*DAY_MS;
 }
 function sprintStatusOptions(sel){return [['planned','Planejado'],['active','Ativo'],['done','Concluído']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
 function sprintNotes(sp){return state.notes.filter(n=>n.target&&n.target.type==='sprint'&&n.target.id===sp.id);}
@@ -1357,16 +1383,11 @@ function renderRetro(){
 
 /* ---------- overview render (read-only: derives everything, mutates nothing) ---------- */
 const OV_MONTHS=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const OV_DAY=86400000;
 const ovNum=n=>String(Math.round(n*10)/10);
-function ovDate(s){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');
-  return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null;
-}
 function ovToday(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());}
 function ovDayParts(t){const d=new Date(t);return {d:d.getUTCDate(),m:OV_MONTHS[d.getUTCMonth()]};}
 function ovRangeLabel(sp){
-  const a=ovDate(sp.start),b=ovDate(sp.end);
+  const a=parseISODate(sp.start),b=parseISODate(sp.end);
   if(a==null&&b==null)return 'sem datas';
   if(a==null||b==null){const o=ovDayParts(a==null?b:a);return `${o.d} ${o.m}`;}
   const A=ovDayParts(a),B=ovDayParts(b);
@@ -1392,12 +1413,12 @@ function ovTodayLeft(sprints){
   if(!n)return null;
   const today=ovToday();
   for(let i=0;i<n;i++){
-    const a=ovDate(sprints[i].start);
+    const a=parseISODate(sprints[i].start);
     if(a==null)continue;
-    const b=ovDate(sprints[i].end);
+    const b=parseISODate(sprints[i].end);
     const end=(b==null||b<a)?a:b;
     if(today<a)return i===0?null:i/n*100;
-    if(today<=end)return (i+(today-a)/(end-a+OV_DAY))/n*100;
+    if(today<=end)return (i+(today-a)/(end-a+DAY_MS))/n*100;
   }
   return null;
 }
@@ -1655,6 +1676,12 @@ function handleItemClick(e){
   if(r==='noteToggle'){itemEl.classList.toggle('showNote');if(itemEl.classList.contains('showNote')){const inp=itemEl.querySelector('.noteInput');if(inp)inp.focus();}return true;}
   if(r==='addNote'){addNoteFromItem(itemEl,root);return true;}
   if(r==='setProgressType'){it.progressType=e.target.dataset.type;renderAll();save();return true;}
+  if(r==='convertToSubtasks'){
+    if(!canConvertToSubtasks(it))return true;
+    if(!confirm('Transformar esta tarefa em tarefa com subtarefas? Não tem volta: depois de converter, o tipo de progresso não pode mais ser trocado.'))return true;
+    it.progressType='subtasks';it.done=false;it.subtasks=[];
+    renderAll();save();return true;
+  }
   if(r==='addSubtask'){
     it.subtasks.push({id:uid(),text:'',done:false});renderAll();save();
     const row=root.querySelector(`[data-iid="${it.id}"] .subtasksBlock .subtaskRow:last-of-type .subtaskText`);
@@ -2051,9 +2078,11 @@ el('changeAuthor').addEventListener('click',()=>{
 el('filterBang').addEventListener('click',()=>{document.body.classList.toggle('filtering');el('filterBang').classList.toggle('active');applyFilter();updateBangCount();});
 el('addSection').addEventListener('click',()=>{const s={id:uid(),title:'Nova seção',subtitle:'',intro:'',items:[{id:uid(),status:'N',progressType:null,done:false,subtasks:[],percent:0,text:'',sprintId:null,sprintOrder:null,blockedBy:[],estimatedHours:null}]};state.sections.push(s);renderAll();save();const t=document.querySelector(`[data-sid="${s.id}"] .secTitle`);if(t){t.focus();t.select();t.scrollIntoView({behavior:'smooth',block:'center'});}});
 el('addSprint').addEventListener('click',()=>{
-  const today=new Date().toISOString().slice(0,10);
-  const number=computeSprintNumber(today,null);
-  const sp={id:uid(),number,name:'',goal:'',start:today,end:'',status:'planned'};
+  const startT=nextSprintStart();
+  const start=startT==null?new Date().toISOString().slice(0,10):toISODate(startT);
+  const end=startT==null?'':toISODate(startT+5*DAY_MS);
+  const number=computeSprintNumber(start,null);
+  const sp={id:uid(),number,name:'',goal:'',start,end,status:'planned'};
   state.sprints.push(sp);expandedSprints.add(sp.id);renderSprints();save();
   const n=document.querySelector(`[data-spid="${sp.id}"] .sprintName`);
   if(n){n.focus();n.scrollIntoView({behavior:'smooth',block:'center'});}
@@ -2287,6 +2316,11 @@ function normalize(o){
 function boot(){
   el('docTitle').value=state.docTitle||'';el('docSub').value=state.docSub||'';
   updateDocumentTitle();
+  /* Backlog abre recolhido: semeia os Sets transitórios com o que veio no documento.
+     Só aqui — seções e itens criados durante a sessão nascem expandidos, prontos para edição. */
+  collapsedSections=new Set(state.sections.map(s=>s.id));
+  collapsedItems=new Set();
+  state.sections.forEach(s=>s.items.forEach(it=>collapsedItems.add(it.id)));
   expandedSprints=new Set(state.sprints.filter(s=>s.status==='active').map(s=>s.id));
   if(expandedSprints.size===0&&state.sprints.length>0){
     const earliest=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''))[0];
