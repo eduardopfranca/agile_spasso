@@ -244,3 +244,35 @@ Chat as a substitute for operations the UI already does well (moving a task is a
 The value is reasoning over the document — prioritization, distribution of new backlog
 across sprints — not command entry. A zero-cost alternative remains available meanwhile:
 a "copy context" button exporting the document to the clipboard for use in any Claude.
+
+## Future: decision links and traceability (not scheduled)
+
+Meeting decisions (`meetings[].decisions`) become traceable entities. Recorded as a design
+intention with the constraints agreed on 2026-07-24 — no implementation planned.
+
+### Design constraints (agreed 2026-07-24)
+
+- **Decisions gain `links: [{type, id}]`**, pointing at items, sprints, milestones, pending
+  items or other decisions. Chips render with live-resolved labels, following the
+  `noteTargetLabel()` pattern.
+- **"Superseded" is derived, never manual.** If D2 links D1 with a "supersedes" relation,
+  D1 renders a superseded badge automatically, naming its successor.
+- **Completion is optional and preferably derived.** Not every decision requires completion.
+  When a decision links a task or sprint whose conclusion fulfils it, the done state derives
+  from that entity's progress; a manual check exists only for decisions with no such link.
+- **History view:** from a decision, show outgoing links, incoming links (who references or
+  superseded it, across all meetings) and the chronological chain of superseding decisions.
+- **A dedicated Decisões tab** (aggregating all decisions across meetings, filterable by
+  status, in the mould of the Notas tab) is the candidate surface for this — to be weighed
+  against an inline expandable panel per decision card when implementation starts.
+- **Deleted link targets are kept with a fallback label** ("(removido)"), never pruned in
+  `normalize()` — pruning would erase exactly the trail this feature exists to preserve.
+- Model changes follow the DATA_MODEL.md recipe: creation literal, defensive backfill in
+  `normalize()`, `toMarkdown()`, delete-handler cascades.
+
+### Companion workflow (no code)
+
+Raw meeting transcripts live in `meetings/` at the repo root, gitignored (private to the
+author's machine). Distilled points enter the platform through the Reuniões tab — decisions
+into `decisions`, forward-looking items into `agenda` — and, when applicable, become backlog
+tasks or pending items. The distillation is assisted by Claude from the transcript.
