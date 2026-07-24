@@ -182,6 +182,8 @@ async function save() {
 
 **Adicional — Retrospectivas. ✅ Concluída (fora do escopo original das Fases 1–3).** Aba somente-leitura que renderiza arquivos Markdown de `retrospectives/YYYYMMDD.md` direto do GitHub (API pública, sem autenticação), com data em formato brasileiro por extenso e a entrada mais recente expandida por padrão. Adicionar uma retrospectiva é só commitar um novo arquivo — sem UI de criação no app, por design (garante que só quem tem acesso ao repositório escreve retrospectivas).
 
+**Adicional — Visão Geral. ✅ Concluída (fora do escopo original das Fases 1–3).** Primeira aba, somente-leitura: KPIs do projeto, linha do tempo dos sprints (altura da barra proporcional às horas estimadas, cor por status, marcador de "hoje"), lista de marcos e esforço por frente. Não guarda nada — cada número é derivado do documento a cada render pelas funções já existentes (`itemProgress`, `assignedItems`), sem campo novo no JSON e sem `save()`. Sprints e seções sem estimativa de horas são sinalizados como tal em vez de aparecerem como zero.
+
 **Fase 3 — Só se precisar.** Feed de atividade "quem fez o quê" consolidado; **Cloudflare Access** (login por e-mail) se quiser trancar o acesso; normalizar dados em tabelas se a concorrência doer. Nada disto de forma preventiva — segue não implementado, por decisão consciente.
 
 ---
@@ -208,6 +210,7 @@ async function save() {
 - [x] Fase 1 — notas autoradas + pendências (com urgência)
 - [x] Fase 2 — sprints
 - [x] Retrospectivas (adicional)
+- [x] Visão Geral (adicional)
 - [ ] Fase 3 — não iniciada (por decisão consciente, não pendência)
 
 ## Future: AI assistant (not scheduled)

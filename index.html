@@ -114,6 +114,7 @@
 
   .sortable-ghost{opacity:.35}
   input[type=file]{display:none}
+  body:not([data-view="overview"]) #view-overview{display:none}
   body:not([data-view="sprints"]) #view-sprints{display:none}
   body:not([data-view="backlog"]) #view-backlog{display:none}
   body:not([data-view="marcos"]) #view-marcos{display:none}
@@ -290,6 +291,84 @@
   .meetingBlockHint{font-weight:600;color:var(--muted);font-size:12px}
   .agendaEntryRow{display:flex;align-items:flex-start;gap:6px}
   .noteText.done{color:var(--muted);text-decoration:line-through}
+
+  /* visão geral (read-only) — classes prefixadas .ov-* para não vazar para as outras abas */
+  #view-overview{
+    --ov-card:#fff;--ov-ink:#16211c;--ov-soft:#5b6a61;--ov-line:#e3e8e2;
+    --ov-done:#2f7d4e;--ov-done-soft:#dff0e5;--ov-active:#e8a020;--ov-active-soft:#fbeed3;
+    --ov-planned:#8fa096;--ov-planned-soft:#edf1ec;--ov-today:#c4442a;
+    --ov-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color:var(--ov-ink)
+  }
+  .ov-head{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .ov-stamp{font-family:var(--ov-mono);font-size:12px;color:var(--ov-soft)}
+  .ov-h2{font-weight:700;font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ov-leg{font-weight:400;font-size:12px;color:var(--ov-soft);display:flex;gap:14px;flex-wrap:wrap}
+  .ov-dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .ov-dot.d{background:var(--ov-done)}.ov-dot.a{background:var(--ov-active)}.ov-dot.p{background:var(--ov-planned)}
+  .ov-dot.e{background:transparent;border:1.5px dashed var(--ov-planned)}
+  .ov-mk-d{color:var(--ov-done)}
+  .ov-mk-p{color:var(--ov-planned)}
+
+  /* KPIs */
+  .ov-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  .ov-kpi{background:var(--ov-card);border:1px solid var(--ov-line);border-radius:10px;padding:14px 16px}
+  .ov-num{font-family:var(--ov-mono);font-weight:600;font-size:26px;letter-spacing:-.02em;line-height:1.2}
+  .ov-num small{font-size:15px;color:var(--ov-soft);font-weight:500}
+  .ov-lbl{font-size:12px;color:var(--ov-soft);margin-top:2px}
+  .ov-kbar{height:5px;border-radius:3px;background:var(--ov-planned-soft);margin-top:10px;overflow:hidden}
+  .ov-kbar i{display:block;height:100%;background:var(--ov-done)}
+
+  /* linha do tempo dos sprints */
+  .ov-railcard{background:var(--ov-card);border:1px solid var(--ov-line);border-radius:12px;padding:18px 18px 12px;margin-bottom:22px;overflow-x:auto}
+  .ov-rail{display:grid;gap:8px;position:relative}
+  .ov-sp{display:flex;flex-direction:column;min-width:0}
+  .ov-bars{height:130px;display:flex;align-items:flex-end;justify-content:center;position:relative}
+  .ov-barh{width:56%;border-radius:5px 5px 0 0;position:relative;min-height:6px}
+  .ov-done .ov-barh{background:var(--ov-done)}
+  .ov-active .ov-barh{background:linear-gradient(to top,var(--ov-done) 0 var(--ov-pct),var(--ov-active) var(--ov-pct) 100%)}
+  .ov-planned .ov-barh{background:var(--ov-planned)}
+  .ov-noest .ov-barh{background:repeating-linear-gradient(45deg,var(--ov-planned-soft),var(--ov-planned-soft) 4px,#fff 4px,#fff 8px);border:1px solid var(--ov-line);height:26px}
+  .ov-empty .ov-barh{background:transparent;border:1.5px dashed var(--ov-planned);height:26px}
+  .ov-hrs{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-family:var(--ov-mono);font-size:11px;color:var(--ov-soft);white-space:nowrap}
+  .ov-base{border-top:2px solid var(--ov-ink);padding-top:8px;text-align:center}
+  .ov-empty .ov-base,.ov-noest .ov-base{border-top-color:var(--ov-line)}
+  .ov-n{font-family:var(--ov-mono);font-weight:600;font-size:12px}
+  .ov-nome{font-size:11px;color:var(--ov-soft);line-height:1.25;margin-top:2px;min-height:40px;
+    display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .ov-tarefas{font-family:var(--ov-mono);font-size:11px;margin-top:2px}
+  .ov-datas{font-family:var(--ov-mono);font-size:10px;color:var(--ov-soft);margin-top:2px}
+  .ov-marcos{margin-top:6px;min-height:16px;text-align:center;font-size:13px;letter-spacing:2px}
+  .ov-badge{display:inline-block;font-family:var(--ov-mono);font-size:10px;padding:1px 7px;border-radius:9px;margin-top:4px}
+  .ov-badge.d{background:var(--ov-done-soft);color:var(--ov-done)}
+  .ov-badge.a{background:var(--ov-active-soft);color:#9a6a0c}
+  .ov-badge.p{background:var(--ov-planned-soft);color:var(--ov-soft)}
+  .ov-hoje{position:absolute;top:-6px;bottom:70px;width:0;border-left:2px dashed var(--ov-today);z-index:2}
+  .ov-hoje b{position:absolute;top:-4px;left:6px;font-family:var(--ov-mono);font-size:10px;color:var(--ov-today);font-weight:600}
+
+  /* painéis inferiores */
+  .ov-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .ov-panel{background:var(--ov-card);border:1px solid var(--ov-line);border-radius:12px;padding:18px;min-width:0}
+  .ov-ms{list-style:none;margin:0;padding:0}
+  .ov-ms li{display:flex;align-items:baseline;gap:9px;padding:6px 0;border-bottom:1px dashed var(--ov-line);font-size:13px}
+  .ov-ms li:last-child{border-bottom:0}
+  .ov-di{font-size:12px;flex:none}
+  .ov-ms .ov-t{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .ov-ms li.ok .ov-t{font-weight:500}
+  .ov-chip{font-family:var(--ov-mono);font-size:10px;color:var(--ov-soft);background:var(--ov-planned-soft);border-radius:8px;padding:1px 7px;margin-left:auto;flex:none}
+  .ov-fr{display:grid;grid-template-columns:minmax(90px,140px) 1fr 74px;gap:10px;align-items:center;padding:4px 0;font-size:12px}
+  .ov-fr .ov-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ov-track{height:11px;background:var(--ov-planned-soft);border-radius:6px;overflow:hidden;display:flex}
+  .ov-track .ov-f{background:var(--ov-done);height:100%}
+  .ov-track .ov-r{background:var(--ov-planned);opacity:.45;height:100%}
+  .ov-fr .ov-h{font-family:var(--ov-mono);font-size:11px;color:var(--ov-soft);text-align:right}
+  .ov-fr.ov-noest .ov-track{background:repeating-linear-gradient(45deg,var(--ov-planned-soft),var(--ov-planned-soft) 4px,#fff 4px,#fff 8px)}
+  .ov-foot{margin-top:22px;font-family:var(--ov-mono);font-size:11px;color:var(--ov-soft)}
+
+  @media(max-width:860px){
+    .ov-kpis{grid-template-columns:repeat(2,1fr)}
+    .ov-grid2{grid-template-columns:1fr}
+  }
 </style>
 
 <div class="wrap">
@@ -339,6 +418,10 @@
       <button class="tb" id="changeAuthor" title="Trocar seu nome">👤 <span id="authorLabel"></span></button>
       <span class="saveState" id="saveState"></span>
     </div>
+  </div>
+
+  <div id="view-overview">
+    <div id="overviewBody"></div>
   </div>
 
   <div id="view-backlog">
@@ -415,6 +498,7 @@ const RETRO_REPO='agile_spasso';
 const uid=()=>'x'+Math.random().toString(36).slice(2,9)+Date.now().toString(36);
 
 const VIEWS=[
+  {id:'overview',label:'Visão Geral'},
   {id:'sprints',label:'Sprints'},
   {id:'backlog',label:'Backlog'},
   {id:'marcos',label:'Marcos'},
@@ -1271,7 +1355,176 @@ function renderRetro(){
   el('retroList').innerHTML=retroCache.map((f,i)=>retroEntryHTML(f,i)).join('')||'<div class="hint">Nenhuma retrospectiva encontrada.</div>';
 }
 
-function renderAll(){renderBacklog();renderSheetDoc();renderSprints();renderMarcos();renderPending();renderNotas();renderMeetings();}
+/* ---------- overview render (read-only: derives everything, mutates nothing) ---------- */
+const OV_MONTHS=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const OV_DAY=86400000;
+const ovNum=n=>String(Math.round(n*10)/10);
+function ovDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');
+  return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null;
+}
+function ovToday(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());}
+function ovDayParts(t){const d=new Date(t);return {d:d.getUTCDate(),m:OV_MONTHS[d.getUTCMonth()]};}
+function ovRangeLabel(sp){
+  const a=ovDate(sp.start),b=ovDate(sp.end);
+  if(a==null&&b==null)return 'sem datas';
+  if(a==null||b==null){const o=ovDayParts(a==null?b:a);return `${o.d} ${o.m}`;}
+  const A=ovDayParts(a),B=ovDayParts(b);
+  return A.m===B.m?`${A.d}–${B.d} ${A.m}`:`${A.d} ${A.m}–${B.d} ${B.m}`;
+}
+function ovHours(items){return items.reduce((sum,it)=>sum+(it.estimatedHours||0),0);}
+function ovDoneItems(items){return items.filter(it=>itemProgress(it)===100);}
+function ovSprintStats(sp){
+  const items=assignedItems(sp.id);
+  const total=items.length;
+  return {
+    total,
+    done:ovDoneItems(items).length,
+    avg:total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0,
+    est:ovHours(items),
+    exe:ovHours(ovDoneItems(items)),
+    missing:items.filter(it=>!(it.estimatedHours>0)).length
+  };
+}
+/* posição do marcador "hoje" em % da largura da grade; null quando fora do intervalo */
+function ovTodayLeft(sprints){
+  const n=sprints.length;
+  if(!n)return null;
+  const today=ovToday();
+  for(let i=0;i<n;i++){
+    const a=ovDate(sprints[i].start);
+    if(a==null)continue;
+    const b=ovDate(sprints[i].end);
+    const end=(b==null||b<a)?a:b;
+    if(today<a)return i===0?null:i/n*100;
+    if(today<=end)return (i+(today-a)/(end-a+OV_DAY))/n*100;
+  }
+  return null;
+}
+function ovKpiHTML(num,suffix,label,pct){
+  return `<div class="ov-kpi">
+    <div class="ov-num">${num}<small>${suffix}</small></div>
+    <div class="ov-lbl">${label}</div>
+    <div class="ov-kbar"><i style="width:${pct}%"></i></div>
+  </div>`;
+}
+function ovSprintCellHTML(sp,st,maxEst){
+  const kind=st.total===0?'ov-empty':(st.est<=0?'ov-noest':'');
+  const statusClass=sp.status==='done'?'ov-done':(sp.status==='active'?'ov-active':'ov-planned');
+  const fillPct=st.est>0?Math.round(st.exe/st.est*100):0;
+  const height=(kind||maxEst<=0)?null:Math.max(6,Math.round(st.est/maxEst*130));
+  const partial=st.missing>0&&st.missing<st.total;
+  const hrs=kind==='ov-empty'?'':(kind==='ov-noest'?'s/ estimativa':`${ovNum(st.est)}h${partial?'*':''}`);
+  const tarefas=st.total===0?'a planejar'
+    :(sp.status==='done'||sp.status==='active')?`${st.done}/${st.total} tarefas`
+    :`${st.total} ${st.total===1?'tarefa':'tarefas'}`;
+  const badge=sp.status==='done'?['d',`${st.avg}%`]
+    :sp.status==='active'?['a',`${st.avg}% · ativa`]
+    :['p',st.total===0?'reservada':'planejada'];
+  const marcos=sprintMilestones(sp).map(m=>
+    `<span class="ov-mk-${m.completed?'d':'p'}" title="${esc(m.title||'(marco sem título)')}">◆</span>`).join('');
+  const styleAttr=sp.status==='active'?` style="--ov-pct:${fillPct}%"`:'';
+  return `<div class="ov-sp ${statusClass} ${kind}"${styleAttr}>
+    <div class="ov-bars"><div class="ov-barh"${height==null?'':` style="height:${height}px"`}>${hrs?`<span class="ov-hrs">${esc(hrs)}</span>`:''}</div></div>
+    <div class="ov-base">
+      <div class="ov-n">S${esc(sp.number||'?')}</div>
+      <div class="ov-nome" title="${esc(sp.name||'')}">${esc(sp.name||'—')}</div>
+      <div class="ov-tarefas">${tarefas}</div>
+      <div class="ov-datas">${esc(ovRangeLabel(sp))}</div>
+      <span class="ov-badge ${badge[0]}">${esc(badge[1])}</span>
+    </div>
+    <div class="ov-marcos">${marcos}</div>
+  </div>`;
+}
+function ovMilestoneRowHTML(m){
+  const sp=m.sprintId?state.sprints.find(s=>s.id===m.sprintId):null;
+  return `<li class="${m.completed?'ok':''}">
+    <span class="ov-di ov-mk-${m.completed?'d':'p'}">◆</span>
+    <span class="ov-t">${esc(m.title||'(marco sem título)')}</span>
+    <span class="ov-chip">${sp?'S'+esc(sp.number||'?'):'—'}</span>
+  </li>`;
+}
+function ovEffortRowHTML(sec){
+  const est=ovHours(sec.items),exe=ovHours(ovDoneItems(sec.items));
+  const title=esc(sec.title||'(seção sem título)');
+  if(est<=0){
+    return `<div class="ov-fr ov-noest"><span class="ov-t" title="${title}">${title}</span>
+      <div class="ov-track"></div><span class="ov-h">s/ estim.</span></div>`;
+  }
+  const f=Math.round(exe/est*100);
+  return `<div class="ov-fr"><span class="ov-t" title="${title}">${title}</span>
+    <div class="ov-track"><div class="ov-f" style="width:${f}%"></div><div class="ov-r" style="width:${100-f}%"></div></div>
+    <span class="ov-h">${ovNum(exe)}/${ovNum(est)}h</span></div>`;
+}
+function ovStampHTML(){
+  if(!state.lastEditedTs)return '';
+  const d=new Date(state.lastEditedTs);
+  if(isNaN(d))return '';
+  const pad=n=>String(n).padStart(2,'0');
+  const when=`${d.getDate()}/${OV_MONTHS[d.getMonth()]}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `<div class="ov-head"><span class="ov-stamp">atualizado ${esc(when)}${state.lastEditedBy?' · '+esc(state.lastEditedBy):''}</span></div>`;
+}
+function overviewHTML(){
+  const items=[];
+  state.sections.forEach(s=>s.items.forEach(it=>items.push(it)));
+  const total=items.length,done=ovDoneItems(items).length;
+  const est=ovHours(items),exe=ovHours(ovDoneItems(items));
+  const msTotal=state.milestones.length,msDone=state.milestones.filter(m=>m.completed).length;
+  const pct=total?Math.round(done/total*100):0;
+  const hPct=est>0?Math.round(exe/est*100):0;
+  const msPct=msTotal?Math.round(msDone/msTotal*100):0;
+
+  const sprints=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  const stats=sprints.map(ovSprintStats);
+  const maxEst=sprints.length?Math.max(0,...stats.map(s=>s.est)):0;
+  const todayLeft=ovTodayLeft(sprints);
+  const n=sprints.length;
+  const rail=n?`<div class="ov-rail" style="grid-template-columns:repeat(${n},minmax(88px,1fr));min-width:${n*88+(n-1)*8}px">
+      ${todayLeft==null?'':`<div class="ov-hoje" style="left:${todayLeft.toFixed(2)}%"><b>hoje</b></div>`}
+      ${sprints.map((sp,i)=>ovSprintCellHTML(sp,stats[i],maxEst)).join('')}
+    </div>`:'<div class="hint">Nenhum sprint criado ainda.</div>';
+
+  const footNotes=sprints.map((sp,i)=>({sp,st:stats[i]}))
+    .filter(x=>x.st.missing>0&&x.st.missing<x.st.total)
+    .map(x=>`S${esc(x.sp.number||'?')}: ${x.st.missing} de ${x.st.total} tarefas ainda sem estimativa de horas`);
+
+  return `${ovStampHTML()}
+  <div class="ov-kpis">
+    ${ovKpiHTML(pct,'%','progresso geral do projeto',pct)}
+    ${ovKpiHTML(done,'/'+total,'tarefas concluídas',pct)}
+    ${ovKpiHTML(ovNum(exe),'h/'+ovNum(est)+'h','horas executadas / estimadas',hPct)}
+    ${ovKpiHTML(msDone,'/'+msTotal,'marcos concluídos',msPct)}
+  </div>
+
+  <div class="ov-railcard">
+    <h2 class="ov-h2">Linha do tempo dos sprints
+      <span class="ov-leg">
+        <span><i class="ov-dot d"></i>executado</span>
+        <span><i class="ov-dot a"></i>em execução</span>
+        <span><i class="ov-dot p"></i>planejado</span>
+        <span><i class="ov-dot e"></i>a planejar</span>
+        <span>◆ marco vinculado</span>
+      </span>
+    </h2>
+    ${rail}
+  </div>
+
+  <div class="ov-grid2">
+    <div class="ov-panel">
+      <h2 class="ov-h2">Marcos <span class="ov-leg"><span><span class="ov-mk-d">◆</span> concluído</span><span><span class="ov-mk-p">◆</span> previsto</span></span></h2>
+      ${state.milestones.length?`<ul class="ov-ms">${state.milestones.map(ovMilestoneRowHTML).join('')}</ul>`:'<div class="hint">Nenhum marco cadastrado.</div>'}
+    </div>
+    <div class="ov-panel">
+      <h2 class="ov-h2">Esforço por frente <span class="ov-leg"><span><i class="ov-dot d"></i>executado</span><span><i class="ov-dot p"></i>restante</span></span></h2>
+      ${state.sections.length?state.sections.map(ovEffortRowHTML).join(''):'<div class="hint">Nenhuma seção no backlog.</div>'}
+    </div>
+  </div>
+
+  ${footNotes.length?`<div class="ov-foot">* ${footNotes.join(' · ')}</div>`:''}`;
+}
+function renderOverview(){el('overviewBody').innerHTML=overviewHTML();}
+
+function renderAll(){renderOverview();renderBacklog();renderSheetDoc();renderSprints();renderMarcos();renderPending();renderNotas();renderMeetings();}
 
 function autosize(e){if(!e)return;e.style.height='auto';e.style.height=e.scrollHeight+'px';}
 function autosizeAll(){document.querySelectorAll('.secIntro,.itemText,#footNote,.docEdit').forEach(autosize);}
