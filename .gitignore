@@ -6,8 +6,4 @@ node_modules/
 *.ods
 *.xlsx
 *.xls
-docs/README.md
-docs/CLAUDE.md
-docs/RETROSPECTIVE_GUIDE.md
-
-docs/DATA_MODEL.md
+backup_documento_*.json
