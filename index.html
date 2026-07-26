@@ -298,7 +298,7 @@
   #view-overview{
     --ov-card:#fff;--ov-ink:#16211c;--ov-soft:#5b6a61;--ov-line:#e3e8e2;
     --ov-done:#2f7d4e;--ov-done-soft:#dff0e5;--ov-active:#e8a020;--ov-active-soft:#fbeed3;
-    --ov-planned:#8fa096;--ov-planned-soft:#edf1ec;--ov-today:#c4442a;
+    --ov-planned:#8fa096;--ov-planned-soft:#edf1ec;--ov-today:#c4442a;--ov-late:#c4442a;
     --ov-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     color:var(--ov-ink)
   }
@@ -310,7 +310,8 @@
   .ov-dot.d{background:var(--ov-done)}.ov-dot.a{background:var(--ov-active)}.ov-dot.p{background:var(--ov-planned)}
   .ov-dot.e{background:transparent;border:1.5px dashed var(--ov-planned)}
   .ov-mk-d{color:var(--ov-done)}
-  .ov-mk-p{color:var(--ov-planned)}
+  .ov-mk-p{color:var(--ov-active)}
+  .ov-mk-l{color:var(--ov-late)}
 
   /* KPIs */
   .ov-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
@@ -986,7 +987,6 @@ function sprintHTML(sp){
   const avg=total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0;
   const hasHours=items.some(it=>it.estimatedHours!=null&&it.estimatedHours>0);
   const totalHours=Math.round(items.reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
-  const doneHours=Math.round(items.filter(it=>itemProgress(it)===100).reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
   const expanded=expandedSprints.has(sp.id);
   const notes=sprintNotes(sp);
   return `<div class="sprintCard ${expanded?'expanded':''}" data-spid="${sp.id}">
@@ -1002,7 +1002,7 @@ function sprintHTML(sp){
       <button class="itemDel" data-role="delSprint" title="Remover sprint">✕</button>
     </div>
     <div class="sprintBar"><div class="sprintBarFill" style="width:${avg}%"></div></div>
-    <div class="sprintProgressText">${done}/${total} concluídos · ${avg}%${hasHours?` · ${totalHours}h estimadas (${doneHours}h concluídas)`:''}</div>
+    <div class="sprintProgressText">${done}/${total} concluídos · ${avg}%${hasHours?` · ${totalHours}h estimadas`:''}</div>
     ${sprintMilestonesHTML(sp)}
     <div class="sprintBody">
       <textarea class="secIntro" data-role="sprintGoal" rows="1" placeholder="objetivo do sprint…">${esc(sp.goal)}</textarea>
@@ -1468,6 +1468,22 @@ function ovTodayLeft(sprints){
   }
   return null;
 }
+/* Sprint vencido: a data final já passou. Normaliza `end` como ovTodayLeft() faz —
+   ausente ou anterior ao início vira o próprio início. O status não entra na conta. */
+function sprintOverdue(sp){
+  const a=parseISODate(sp.start),b=parseISODate(sp.end);
+  const end=(b==null||(a!=null&&b<a))?a:b;
+  if(end==null)return false;
+  return end<ovToday();
+}
+/* 'done' | 'late' | 'planned'. Marco sem sprint nunca atrasa: não há data para vencer. */
+function ovMilestoneState(m){
+  if(m.completed)return 'done';
+  const sp=m.sprintId?state.sprints.find(s=>s.id===m.sprintId):null;
+  return sp&&sprintOverdue(sp)?'late':'planned';
+}
+const OV_MK_CLS={done:'d',late:'l',planned:'p'};
+function ovMilestoneClass(m){return 'ov-mk-'+OV_MK_CLS[ovMilestoneState(m)];}
 function ovKpiHTML(num,suffix,label,pct){
   return `<div class="ov-kpi">
     <div class="ov-num">${num}<small>${suffix}</small></div>
@@ -1489,7 +1505,7 @@ function ovSprintCellHTML(sp,st,maxEst){
     :sp.status==='active'?['a',`${st.avg}% · ativa`]
     :['p',st.total===0?'reservada':'planejada'];
   const marcos=sprintMilestones(sp).map(m=>
-    `<span class="ov-mk-${m.completed?'d':'p'}" title="${esc(m.title||'(marco sem título)')}">◆</span>`).join('');
+    `<span class="${ovMilestoneClass(m)}" title="${esc(m.title||'(marco sem título)')}">◆</span>`).join('');
   const styleAttr=sp.status==='active'?` style="--ov-pct:${fillPct}%"`:'';
   return `<div class="ov-sp ${statusClass} ${kind}"${styleAttr}>
     <div class="ov-bars"><div class="ov-barh"${height==null?'':` style="height:${height}px"`}>${hrs?`<span class="ov-hrs">${esc(hrs)}</span>`:''}</div></div>
@@ -1506,7 +1522,7 @@ function ovSprintCellHTML(sp,st,maxEst){
 function ovMilestoneRowHTML(m){
   const sp=m.sprintId?state.sprints.find(s=>s.id===m.sprintId):null;
   return `<li class="${m.completed?'ok':''}">
-    <span class="ov-di ov-mk-${m.completed?'d':'p'}">◆</span>
+    <span class="ov-di ${ovMilestoneClass(m)}">◆</span>
     <span class="ov-t">${esc(m.title||'(marco sem título)')}</span>
     <span class="ov-chip">${sp?'S'+esc(sp.number||'?'):'—'}</span>
   </li>`;
@@ -1564,7 +1580,7 @@ function overviewHTML(){
   </div>
 
   <div class="ov-railcard">
-    <h2 class="ov-h2">Linha do tempo dos sprints
+    <h2 class="ov-h2">
       <span class="ov-leg">
         <span><i class="ov-dot d"></i>executado</span>
         <span><i class="ov-dot a"></i>em execução</span>
@@ -1578,7 +1594,7 @@ function overviewHTML(){
 
   <div class="ov-grid2">
     <div class="ov-panel">
-      <h2 class="ov-h2">Marcos <span class="ov-leg"><span><span class="ov-mk-d">◆</span> concluído</span><span><span class="ov-mk-p">◆</span> previsto</span></span></h2>
+      <h2 class="ov-h2">Marcos <span class="ov-leg"><span><span class="ov-mk-d">◆</span> concluído</span><span><span class="ov-mk-p">◆</span> previsto</span><span><span class="ov-mk-l">◆</span> atrasado</span></span></h2>
       ${state.milestones.length?`<ul class="ov-ms">${state.milestones.map(ovMilestoneRowHTML).join('')}</ul>`:'<div class="hint">Nenhum marco cadastrado.</div>'}
     </div>
     <div class="ov-panel">
@@ -2208,10 +2224,9 @@ function toMarkdown(){
     const avg=total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0;
     const hasHours=items.some(it=>it.estimatedHours!=null&&it.estimatedHours>0);
     const totalHours=Math.round(items.reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
-    const doneHours=Math.round(items.filter(it=>itemProgress(it)===100).reduce((sum,it)=>sum+(it.estimatedHours||0),0)*10)/10;
     md+=`### ${sprintLabel(sp)}\n`;
     md+=`Status: \`${sp.status}\` · ${sp.start||'—'} a ${sp.end||'—'} · progresso: ${done}/${total} concluídos · ${avg}%`;
-    if(hasHours)md+=` · ${totalHours}h estimadas (${doneHours}h concluídas)`;
+    if(hasHours)md+=` · ${totalHours}h estimadas`;
     md+='\n\n';
     if(sp.goal)md+=`${sp.goal}\n\n`;
     if(items.length){
