@@ -298,7 +298,7 @@
   #view-overview{
     --ov-card:#fff;--ov-ink:#16211c;--ov-soft:#5b6a61;--ov-line:#e3e8e2;
     --ov-done:#2f7d4e;--ov-done-soft:#dff0e5;--ov-active:#e8a020;--ov-active-soft:#fbeed3;
-    --ov-planned:#8fa096;--ov-planned-soft:#edf1ec;--ov-today:#c4442a;--ov-late:#c4442a;
+    --ov-planned:#8fa096;--ov-planned-soft:#edf1ec;--ov-today:#c4442a;--ov-late:#c4442a;--ov-late-soft:#f7ddd7;
     --ov-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     color:var(--ov-ink)
   }
@@ -315,12 +315,19 @@
 
   /* KPIs */
   .ov-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
-  .ov-kpi{background:var(--ov-card);border:1px solid var(--ov-line);border-radius:10px;padding:14px 16px}
+  /* coluna flex + margem automática no rótulo: a barra (ou o espaçador que a
+     substitui) encosta no rodapé do card, alinhando as quatro apesar de nem todos
+     os cards terem linha de detalhe */
+  .ov-kpi{background:var(--ov-card);border:1px solid var(--ov-line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column}
   .ov-num{font-family:var(--ov-mono);font-weight:600;font-size:26px;letter-spacing:-.02em;line-height:1.2}
   .ov-num small{font-size:15px;color:var(--ov-soft);font-weight:500}
-  .ov-lbl{font-size:12px;color:var(--ov-soft);margin-top:2px}
+  .ov-lbl{font-size:12px;color:var(--ov-soft);margin-top:2px;margin-bottom:auto}
+  .ov-kdet{font-family:var(--ov-mono);font-size:11px;color:var(--ov-soft);margin-top:4px}
   .ov-kbar{height:5px;border-radius:3px;background:var(--ov-planned-soft);margin-top:10px;overflow:hidden}
   .ov-kbar i{display:block;height:100%;background:var(--ov-done)}
+  /* ocupa o lugar da barra nos cards sem proporção a exibir, mantendo o grid alinhado */
+  .ov-kvoid{height:5px;margin-top:10px}
+  .ov-late-ink{color:var(--ov-late)}
 
   /* linha do tempo dos sprints */
   .ov-railcard{background:var(--ov-card);border:1px solid var(--ov-line);border-radius:12px;padding:18px 18px 12px;margin-bottom:22px;overflow-x:auto}
@@ -348,6 +355,7 @@
   .ov-badge.d{background:var(--ov-done-soft);color:var(--ov-done)}
   .ov-badge.a{background:var(--ov-active-soft);color:#9a6a0c}
   .ov-badge.p{background:var(--ov-planned-soft);color:var(--ov-soft)}
+  .ov-badge.l{background:var(--ov-late-soft);color:var(--ov-late)}
   .ov-hoje{position:absolute;top:-6px;bottom:70px;width:0;border-left:2px dashed var(--ov-today);z-index:2}
   .ov-hoje b{position:absolute;top:-4px;left:6px;font-family:var(--ov-mono);font-size:10px;color:var(--ov-today);font-weight:600}
 
@@ -368,6 +376,18 @@
   .ov-track .ov-r{background:var(--ov-planned);opacity:.45;height:100%}
   .ov-fr .ov-h{font-family:var(--ov-mono);font-size:11px;color:var(--ov-soft);text-align:right}
   .ov-fr.ov-noest .ov-track{background:repeating-linear-gradient(45deg,var(--ov-planned-soft),var(--ov-planned-soft) 4px,#fff 4px,#fff 8px)}
+  .ov-wide{margin-bottom:22px}
+  .ov-gl{font-family:var(--ov-mono);font-size:11px;font-weight:600;color:var(--ov-soft);margin:16px 0 2px}
+  .ov-colh{font-size:13px;font-weight:700;margin-bottom:2px}
+  .ov-colh+.ov-gl{margin-top:8px}
+  .ov-gl.late{color:var(--ov-late)}
+  .ov-ms li.hint{display:block;border-bottom:0;margin:0;padding:6px 0}
+  .ov-pct{font-family:var(--ov-mono);font-size:11px;color:var(--ov-soft);flex:none}
+  .ov-bang{color:var(--ov-late);font-weight:700;flex:none}
+  .ov-who{font-size:11px;color:var(--ov-soft);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ov-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none}
+  .ov-right .ov-chip{margin-left:0}
+  .ov-right .ov-badge{margin-top:0}
   .ov-foot{margin-top:22px;font-family:var(--ov-mono);font-size:11px;color:var(--ov-soft)}
 
   @media(max-width:860px){
@@ -1468,13 +1488,21 @@ function ovTodayLeft(sprints){
   }
   return null;
 }
-/* Sprint vencido: a data final já passou. Normaliza `end` como ovTodayLeft() faz —
-   ausente ou anterior ao início vira o próprio início. O status não entra na conta. */
-function sprintOverdue(sp){
+/* Data final normalizada como ovTodayLeft() faz: ausente ou anterior ao início
+   vira o próprio início. Null quando o sprint não tem data alguma. */
+function sprintEndTime(sp){
   const a=parseISODate(sp.start),b=parseISODate(sp.end);
-  const end=(b==null||(a!=null&&b<a))?a:b;
-  if(end==null)return false;
-  return end<ovToday();
+  return (b==null||(a!=null&&b<a))?a:b;
+}
+/* Sprint vencido: a data final já passou. O status não entra na conta. */
+function sprintOverdue(sp){
+  const end=sprintEndTime(sp);
+  return end!=null&&end<ovToday();
+}
+/* Simétrico: o sprint ainda não começou. */
+function sprintNotStarted(sp){
+  const a=parseISODate(sp.start);
+  return a!=null&&a>ovToday();
 }
 /* 'done' | 'late' | 'planned'. Marco sem sprint nunca atrasa: não há data para vencer. */
 function ovMilestoneState(m){
@@ -1484,11 +1512,84 @@ function ovMilestoneState(m){
 }
 const OV_MK_CLS={done:'d',late:'l',planned:'p'};
 function ovMilestoneClass(m){return 'ov-mk-'+OV_MK_CLS[ovMilestoneState(m)];}
-function ovKpiHTML(num,suffix,label,pct){
+
+/* ----- desvios: tarefas e marcos fora da janela do sprint a que pertencem -----
+   Nada sem sprintId entra nas listas: sem data não há o que comparar. */
+function ovSprintOf(x){return x.sprintId?state.sprints.find(s=>s.id===x.sprintId)||null:null;}
+function ovAllItems(){const out=[];state.sections.forEach(s=>s.items.forEach(it=>out.push(it)));return out;}
+function ovByEnd(a,b){return (sprintEndTime(ovSprintOf(a))||0)-(sprintEndTime(ovSprintOf(b))||0);}
+function ovByStart(a,b){return (parseISODate(ovSprintOf(a).start)||0)-(parseISODate(ovSprintOf(b).start)||0);}
+function ovLateTasks(){
+  return ovAllItems().filter(it=>{const sp=ovSprintOf(it);return sp&&sprintOverdue(sp)&&itemProgress(it)<100;}).sort(ovByEnd);
+}
+function ovAheadTasks(){
+  return ovAllItems().filter(it=>{const sp=ovSprintOf(it);return sp&&sprintNotStarted(sp)&&itemProgress(it)>0;}).sort(ovByStart);
+}
+function ovLateMilestones(){
+  return state.milestones.filter(m=>ovMilestoneState(m)==='late').sort(ovByEnd);
+}
+function ovAheadMilestones(){
+  return state.milestones.filter(m=>{const sp=ovSprintOf(m);return m.completed&&sp&&sprintNotStarted(sp);}).sort(ovByStart);
+}
+function ovChipHTML(sp){return `<span class="ov-chip">${sp?'S'+esc(sp.number||'?'):'—'}</span>`;}
+function ovDevMilestoneHTML(m,late){
+  const sp=ovSprintOf(m);
+  return `<li>
+    <span class="ov-di ${ovMilestoneClass(m)}">◆</span>
+    <span class="ov-t" title="${esc(m.title||'')}">${esc(m.title||'(marco sem título)')}</span>
+    ${ovChipHTML(sp)}
+    ${late&&sp?`<span class="ov-pct">venceu ${shortDate(sp.end)}</span>`:''}
+  </li>`;
+}
+function ovDevTaskHTML(it){
+  const sp=ovSprintOf(it);
+  const blockers=itemBlockState(it)==='open'?itemBlockers(it).filter(p=>p.status==='open'):[];
+  const bang=blockers.length?`<span class="ov-bang" title="${esc('bloqueada por: '+blockers.map(p=>p.title||'(item pendente sem título)').join(' · '))}">!</span>`:'';
+  const txt=(it.text||'').trim();
+  return `<li>
+    <span class="ov-t" title="${esc(txt)}">${esc(txt||'(tarefa sem título)')}</span>
+    ${bang}
+    ${ovChipHTML(sp)}
+    <span class="ov-pct">${itemProgress(it)}%</span>
+  </li>`;
+}
+const OV_MAX_ROWS=5;
+function ovGroupHTML(label,late,rows,emptyTxt){
+  const shown=rows.length>OV_MAX_ROWS
+    ? rows.slice(0,OV_MAX_ROWS).join('')+`<li class="hint">+${rows.length-OV_MAX_ROWS} outras</li>`
+    : rows.join('');
+  return `<div class="ov-gl${late?' late':''}">${label} · ${rows.length}</div>
+    <ul class="ov-ms">${rows.length?shown:`<li class="hint">${emptyTxt}</li>`}</ul>`;
+}
+const OV_URGENCY_ORDER={alta:0,media:1,baixa:2};
+const OV_URGENCY_BADGE={alta:'l',media:'a',baixa:'p'};
+const OV_URGENCY_LABEL={alta:'alta',media:'média',baixa:'baixa'};
+function ovOpenPending(){
+  return state.pendingItems.filter(p=>p.status==='open').sort((a,b)=>{
+    const ua=OV_URGENCY_ORDER[a.urgency]==null?1:OV_URGENCY_ORDER[a.urgency];
+    const ub=OV_URGENCY_ORDER[b.urgency]==null?1:OV_URGENCY_ORDER[b.urgency];
+    return ua!==ub?ua-ub:(a.createdAt||'').localeCompare(b.createdAt||'');
+  });
+}
+function ovPendingRowHTML(p){
+  const blocks=ovAllItems().filter(it=>(it.blockedBy||[]).includes(p.id)).length;
+  const who=(p.responsible||[]).filter(r=>r&&r.trim());
+  const badge=OV_URGENCY_BADGE[p.urgency]||'p';
+  return `<li>
+    <span class="ov-t" title="${esc(p.title||'')}">${esc(p.title||'(item pendente sem título)')}</span>
+    ${who.length?`<span class="ov-who">${esc(who.join(', '))}</span>`:'<span class="ov-who hint">sem responsável</span>'}
+    <span class="ov-right">
+      <span class="ov-badge ${badge}">${esc(OV_URGENCY_LABEL[p.urgency]||p.urgency||'—')}</span>
+      ${blocks?`<span class="ov-chip">bloqueia ${blocks} ${blocks===1?'tarefa':'tarefas'}</span>`:''}
+    </span>
+  </li>`;
+}
+function ovKpiHTML(num,suffix,label,pct,detail){
   return `<div class="ov-kpi">
     <div class="ov-num">${num}<small>${suffix}</small></div>
     <div class="ov-lbl">${label}</div>
-    <div class="ov-kbar"><i style="width:${pct}%"></i></div>
+    ${detail?`<div class="ov-kdet">${detail}</div>`:''}
+    ${pct==null?'<div class="ov-kvoid"></div>':`<div class="ov-kbar"><i style="width:${pct}%"></i></div>`}
   </div>`;
 }
 function ovSprintCellHTML(sp,st,maxEst){
@@ -1551,11 +1652,19 @@ function overviewHTML(){
   const items=[];
   state.sections.forEach(s=>s.items.forEach(it=>items.push(it)));
   const total=items.length,done=ovDoneItems(items).length;
-  const est=ovHours(items),exe=ovHours(ovDoneItems(items));
+  const est=ovHours(items);
+  /* horas executadas creditando progresso parcial — ovHours(ovDoneItems()) descartaria
+     tudo que não está em 100%, contradizendo o percentual exibido ao lado */
+  const exe=items.reduce((sum,it)=>sum+(it.estimatedHours||0)*itemProgress(it)/100,0);
   const msTotal=state.milestones.length,msDone=state.milestones.filter(m=>m.completed).length;
-  const pct=total?Math.round(done/total*100):0;
-  const hPct=est>0?Math.round(exe/est*100):0;
+  /* média de itemProgress() sobre todas as tarefas: conta parcial e não exclui
+     quem está sem estimativa de horas */
+  const pct=total?Math.round(items.reduce((sum,it)=>sum+itemProgress(it),0)/total):0;
   const msPct=msTotal?Math.round(msDone/msTotal*100):0;
+
+  const lateT=ovLateTasks(),aheadT=ovAheadTasks();
+  const lateM=ovLateMilestones(),aheadM=ovAheadMilestones();
+  const pend=ovOpenPending();
 
   const sprints=[...state.sprints].sort((a,b)=>(a.start||'').localeCompare(b.start||''));
   const stats=sprints.map(ovSprintStats);
@@ -1573,10 +1682,12 @@ function overviewHTML(){
 
   return `${ovStampHTML()}
   <div class="ov-kpis">
-    ${ovKpiHTML(pct,'%','progresso geral do projeto',pct)}
-    ${ovKpiHTML(done,'/'+total,'tarefas concluídas',pct)}
-    ${ovKpiHTML(ovNum(exe),'h/'+ovNum(est)+'h','horas executadas / estimadas',hPct)}
+    ${ovKpiHTML(pct,'%','progresso geral do projeto',pct,`${done}/${total} tarefas · ${ovNum(exe)}h/${ovNum(est)}h`)}
     ${ovKpiHTML(msDone,'/'+msTotal,'marcos concluídos',msPct)}
+    ${ovKpiHTML(`<span class="ov-late-ink">${lateT.length+lateM.length}</span>`,'','atrasados',null,
+      `${lateT.length} ${lateT.length===1?'tarefa':'tarefas'} · ${lateM.length} ${lateM.length===1?'marco':'marcos'}`)}
+    ${ovKpiHTML(aheadT.length+aheadM.length,'','adiantados',null,
+      `${aheadT.length} ${aheadT.length===1?'tarefa':'tarefas'} · ${aheadM.length} ${aheadM.length===1?'marco':'marcos'}`)}
   </div>
 
   <div class="ov-railcard">
@@ -1590,6 +1701,31 @@ function overviewHTML(){
       </span>
     </h2>
     ${rail}
+  </div>
+
+  <div class="ov-panel ov-wide">
+    <h2 class="ov-h2">Fora do previsto</h2>
+    <div class="ov-grid2">
+      <div>
+        <div class="ov-colh">Marcos</div>
+        ${ovGroupHTML('Atrasados',true,lateM.map(m=>ovDevMilestoneHTML(m,true)),'— nenhum')}
+        ${ovGroupHTML('Adiantados',false,aheadM.map(m=>ovDevMilestoneHTML(m,false)),'— nenhum')}
+      </div>
+      <div>
+        <div class="ov-colh">Tarefas</div>
+        ${ovGroupHTML('Atrasadas',true,lateT.map(ovDevTaskHTML),'— nenhuma')}
+        ${ovGroupHTML('Adiantadas',false,aheadT.map(ovDevTaskHTML),'— nenhuma')}
+      </div>
+    </div>
+  </div>
+
+  <div class="ov-panel ov-wide">
+    <h2 class="ov-h2">Pendências abertas · ${pend.length}</h2>
+    <ul class="ov-ms">${pend.length
+      ?(pend.length>OV_MAX_ROWS
+        ? pend.slice(0,OV_MAX_ROWS).map(ovPendingRowHTML).join('')+`<li class="hint">+${pend.length-OV_MAX_ROWS} outras</li>`
+        : pend.map(ovPendingRowHTML).join(''))
+      :'<li class="hint">— nenhuma pendência aberta</li>'}</ul>
   </div>
 
   <div class="ov-grid2">
