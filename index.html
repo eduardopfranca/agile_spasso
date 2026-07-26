@@ -924,14 +924,59 @@ function computeSprintNumber(newStart,excludeId){
   const allNumbers=sorted.map(s=>s.number).filter(Boolean);
   return nextLetterSuffix(preceding.number,allNumbers);
 }
+/* Segunda-feira seguinte a `t` (nunca o próprio `t`, mesmo que já seja segunda). */
+function nextMondayAfter(t){
+  const weekday=new Date(t).getUTCDay();
+  return t+(((8-weekday)%7)||7)*DAY_MS;
+}
 /* Próximo sprint: começa na segunda-feira seguinte ao maior `end` já existente,
    mantendo o ritmo seg–sáb (end = start + 5 dias). Null quando não há data alguma. */
 function nextSprintStart(){
   const ends=state.sprints.map(sp=>parseISODate(sp.end)!=null?parseISODate(sp.end):parseISODate(sp.start)).filter(t=>t!=null);
   if(!ends.length)return null;
-  const last=Math.max(...ends);
-  const weekday=new Date(last).getUTCDay();
-  return last+(((8-weekday)%7)||7)*DAY_MS;
+  return nextMondayAfter(Math.max(...ends));
+}
+function shortDate(iso){
+  const t=parseISODate(iso);
+  if(t==null)return '—';
+  const d=new Date(t);
+  return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0');
+}
+/* Planeja a inserção de um sprint logo depois de `after`, deslocando em cascata os
+   posteriores. Função pura: não lê nem escreve nada além de state.sprints (leitura). */
+function sprintInsertPlan(after,weeks){
+  const base=parseISODate(after.end)!=null?parseISODate(after.end):parseISODate(after.start);
+  const startT=nextMondayAfter(base);
+  const endT=startT+(weeks*7-2)*DAY_MS;
+  const following=state.sprints
+    .filter(s=>s.id!==after.id&&(s.start||'')>(after.start||''))
+    .sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  const blocked=following.filter(s=>s.status==='done');
+  let delta=0;
+  if(following.length){
+    const firstT=parseISODate(following[0].start);
+    if(firstT!=null){
+      const gap=(firstT-endT)/DAY_MS;
+      /* gap >= 1 significa que o novo sprint coube num buraco já existente.
+         Senão, arredonda para o múltiplo de 7 seguinte, preservando o dia da semana. */
+      if(gap<1)delta=Math.ceil((1-gap)/7)*7;
+    }
+  }
+  const moves=delta>0?following.map(s=>{
+    const sT=parseISODate(s.start),eT=parseISODate(s.end);
+    return {sp:s,oldStart:s.start,start:sT!=null?toISODate(sT+delta*DAY_MS):s.start,end:eT!=null?toISODate(eT+delta*DAY_MS):null};
+  }):[];
+  return {start:toISODate(startT),end:toISODate(endT),delta,moves,blocked};
+}
+function sprintInsertPreview(plan){
+  const lines=[`Novo sprint: ${shortDate(plan.start)} – ${shortDate(plan.end)}.`,''];
+  if(!plan.moves.length)lines.push('Nenhum sprint será deslocado.');
+  else{
+    lines.push(`${plan.moves.length} sprint(s) deslocado(s) em ${plan.delta} dias:`);
+    plan.moves.forEach(mv=>lines.push(`${sprintLabel(mv.sp)}: ${shortDate(mv.oldStart)} → ${shortDate(mv.start)}`));
+  }
+  lines.push('','Continuar?');
+  return lines.join('\n');
 }
 function sprintStatusOptions(sel){return [['planned','Planejado'],['active','Ativo'],['done','Concluído']].map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${l}</option>`).join('');}
 function sprintNotes(sp){return state.notes.filter(n=>n.target&&n.target.type==='sprint'&&n.target.id===sp.id);}
@@ -953,6 +998,7 @@ function sprintHTML(sp){
       <input class="sprintDate" type="date" data-role="sprintStart" value="${esc(sp.start)}">
       <span class="sprintDateSep">–</span>
       <input class="sprintDate" type="date" data-role="sprintEnd" value="${esc(sp.end)}">
+      <button class="itemDel" data-role="insertSprintAfter" title="Inserir sprint depois deste">⤵</button>
       <button class="itemDel" data-role="delSprint" title="Remover sprint">✕</button>
     </div>
     <div class="sprintBar"><div class="sprintBarFill" style="width:${avg}%"></div></div>
@@ -1834,6 +1880,29 @@ SP.addEventListener('click',e=>{
       state.sections.forEach(s=>s.items.forEach(it=>{if(it.sprintId===sid)it.sprintId=null;}));
       state.sprints=state.sprints.filter(s=>s.id!==sid);renderAll();save();
     }}
+  else if(r==='insertSprintAfter'){
+    const sp=state.sprints.find(s=>s.id===card.dataset.spid);if(!sp)return;
+    if(parseISODate(sp.end)==null&&parseISODate(sp.start)==null){
+      alert('Este sprint não tem datas; não há de onde partir para inserir o seguinte.');return;
+    }
+    const raw=prompt('Duração do novo sprint, em semanas:','1');
+    if(raw==null)return;
+    const weeks=parseInt(raw,10);
+    if(!Number.isFinite(weeks)||weeks<1){alert('Duração inválida.');return;}
+    const plan=sprintInsertPlan(sp,weeks);
+    if(plan.blocked.length){
+      alert('Não é possível inserir aqui: os sprints abaixo já estão concluídos e seriam deslocados.\n\n'+
+        plan.blocked.map(s=>`${sprintLabel(s)} (${shortDate(s.start)})`).join('\n'));
+      return;
+    }
+    if(!confirm(sprintInsertPreview(plan)))return;
+    plan.moves.forEach(mv=>{mv.sp.start=mv.start;if(mv.end!=null)mv.sp.end=mv.end;});
+    const nsp={id:uid(),number:computeSprintNumber(plan.start,null),name:'',goal:'',start:plan.start,end:plan.end,status:'planned'};
+    state.sprints.push(nsp);expandedSprints.add(nsp.id);
+    renderAll();save();
+    const n=e.currentTarget.querySelector(`[data-spid="${nsp.id}"] .sprintName`);
+    if(n){n.focus();n.scrollIntoView({behavior:'smooth',block:'center'});}
+  }
   else if(r==='addSprintNote'){
     const spId=e.target.dataset.sprintId;
     const inp=card.querySelector('[data-role="sprintNoteInput"]');
