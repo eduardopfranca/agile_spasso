@@ -31,6 +31,11 @@ persisted to a Cloudflare Worker (`GET/POST /doc`) with optimistic concurrency.
 - `normalize()` backfills missing fields on load. Any new field must be backfilled there,
   defensively, without overwriting existing data.
 - Transient UI state (expanded, collapsed) lives in in-memory `Set`s, never in the document.
+- Sprint date arithmetic goes through `parseISODate`/`toISODate` and `DAY_MS`. Never
+  `new Date('YYYY-MM-DD')` followed by `getDate()`: the string parses as UTC and reads as local,
+  which loses a day in BRT. It fails silently.
+- Shifting dates in bulk is an explicit user action, never a side effect of editing one date.
+  Correcting a sprint's end date must not push the timeline.
 
 ## Notes
 

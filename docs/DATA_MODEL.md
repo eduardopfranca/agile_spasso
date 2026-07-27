@@ -183,7 +183,19 @@ Computed on every render. Do not persist them, do not cache them in the document
 | Item's blockers, resolved | `itemBlockers(it)` — filters out dead ids |
 | Sprint's tasks, ordered | `assignedItems(sprintId)` — sorted by `sprintOrder` |
 | Sprint progress | average of `itemProgress()` across assigned items |
+| Sprint overdue | `sprintOverdue(sp)` — its end date is in the past |
+| Sprint not started | `sprintNotStarted(sp)` — its start date has not arrived |
+| Milestone state | `ovMilestoneState(m)` → `'done' \| 'late' \| 'planned'` |
 | Note address | `noteTargetLabel(target)` |
+
+`sprintOverdue()` **ignores `status` by design**: a sprint marked `'done'` whose end date has
+passed is still overdue. The date is the fact; the status is a claim about it, and a stale claim
+must not hide a stale date.
+
+`ovMilestoneState()` is `'done'` when `completed`, `'late'` when not completed and its sprint is
+overdue, `'planned'` otherwise. A milestone with no `sprintId` is never late — there is no date to
+miss. The overview's four collectors (`ovLateTasks`, `ovAheadTasks`, `ovLateMilestones`,
+`ovAheadMilestones`) are consumers of these three, not separate rules.
 
 ## Transient state — never persisted
 
@@ -215,6 +227,11 @@ that no longer exist. Nothing else is repaired on load.
 **Known gap:** deleting a sprint does not clear `milestone.sprintId`, orphaned sprint notes, or
 stale `sprintOrder`. Nothing crashes — `noteTargetLabel()` falls back to "(sprint removido)" and
 the milestone dropdown shows "sem sprint" — but the dead id stays in the document.
+
+Since `ovMilestoneState()` exists, that gap is no longer merely cosmetic. The function looks the
+sprint up by id, finds nothing, and falls through to `'planned'`: an orphaned milestone can never
+be `'late'`, so it silently drops out of the overview's late count and its deviation panel. It
+stops being overdue by accident, not by decision.
 
 ## Adding a field
 

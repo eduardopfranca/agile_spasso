@@ -184,6 +184,12 @@ async function save() {
 
 **Adicional — Visão Geral. ✅ Concluída (fora do escopo original das Fases 1–3).** Primeira aba, somente-leitura: KPIs do projeto, linha do tempo dos sprints (altura da barra proporcional às horas estimadas, cor por status, marcador de "hoje"), lista de marcos e esforço por frente. Não guarda nada — cada número é derivado do documento a cada render pelas funções já existentes (`itemProgress`, `assignedItems`), sem campo novo no JSON e sem `save()`. Sprints e seções sem estimativa de horas são sinalizados como tal em vez de aparecerem como zero.
 
+**Adicional — Inserção de sprint no meio da linha do tempo. ✅ Concluída (26/07).** Cada card de sprint ganhou um botão que insere um novo sprint logo depois dele, perguntando a duração em semanas. Os sprints seguintes são deslocados em cascata, sempre em **múltiplos de sete dias** — o que preserva a duração de cada um, as folgas entre eles e o dia da semana em que começam e terminam. Quando o novo sprint cabe num intervalo já vago, o deslocamento é zero e ninguém se move. Um sprint já **concluído** à frente bloqueia a operação: o passado não se remarca. O usuário confirma um resumo com as datas do novo sprint e a lista dos deslocamentos antes de qualquer mutação. O deslocamento **não é persistido em lugar nenhum**: é aplicado às datas dos sprints e esquecido — não há histórico de remarcação, nem campo novo no JSON. Editar a data de um sprint à mão continua sem disparar cascata; a cascata é ação explícita.
+
+**Adicional — Estado "atrasado" nos marcos. ✅ Concluída (26/07).** O marco deixou de ter dois estados (concluído/previsto) e passou a ter três, com o terceiro derivado do sprint vinculado: não concluído + sprint com data final vencida = **atrasado**. Nada é guardado — `ovMilestoneState()` calcula a cada render. Marco sem sprint nunca atrasa, por não haver data para vencer. O status do sprint é ignorado no cálculo: sprint marcado como concluído com data passada continua vencendo seus marcos.
+
+**Adicional — Visão Geral reorganizada. ✅ Concluída (26/07).** Os três primeiros KPIs diziam o mesmo fato de três formas (o percentual era a razão de tarefas concluídas reescrita) e foram agrupados num card só, cujo número passou a ser a média de progresso de todas as tarefas — conta subtarefa parcial e não exclui quem está sem estimativa de horas. O espaço liberado virou dois cards novos, **atrasados** e **adiantados**, contando tarefas e marcos fora da janela do sprint a que pertencem. Abaixo da linha do tempo entraram dois painéis: **Desvios**, listando esses mesmos itens com o sprint e o quanto andaram, e **Pendências abertas**, ordenado por urgência. Tudo derivado a cada render, sem campo novo no JSON e sem `save()`.
+
 **Fase 3 — Só se precisar.** Feed de atividade "quem fez o quê" consolidado; **Cloudflare Access** (login por e-mail) se quiser trancar o acesso; normalizar dados em tabelas se a concorrência doer. Nada disto de forma preventiva — segue não implementado, por decisão consciente.
 
 ---
@@ -211,6 +217,9 @@ async function save() {
 - [x] Fase 2 — sprints
 - [x] Retrospectivas (adicional)
 - [x] Visão Geral (adicional)
+- [x] Inserção de sprint com deslocamento em cascata (adicional)
+- [x] Estado "atrasado" nos marcos (adicional)
+- [x] Visão Geral reorganizada: KPIs agrupados, desvios e pendências abertas (adicional)
 - [ ] Fase 3 — não iniciada (por decisão consciente, não pendência)
 
 ## Future: AI assistant (not scheduled)

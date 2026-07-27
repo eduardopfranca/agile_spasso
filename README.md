@@ -35,6 +35,8 @@ docs/
   RETROSPECTIVE_GUIDE.md   template and register for retrospectives
   PLANO_PLATAFORMA_AGILE.md architecture decisions
   DATA_MODEL.md            shape of the shared JSON document
+  MAPEAMENTO_PLANILHA_MAELY.md  what the spreadsheet does, feature by feature
+  Controle Derivativos.ods the spreadsheet itself, kept as the mapping's source
 retrospectives/
   YYYYMMDD.md              daily retrospectives, rendered in the app
 ```
@@ -82,6 +84,8 @@ participle for technical actions. Read the guide before writing one.
 | `RETROSPECTIVE_GUIDE.md` | Template and register for retrospectives |
 | `PLANO_PLATAFORMA_AGILE.md` | Architecture decisions and their rationale |
 | `DATA_MODEL.md` | Shape and invariants of the shared JSON document |
+| `MAPEAMENTO_PLANILHA_MAELY.md` | Feature-by-feature map of the spreadsheet the app replaces |
+| `Controle Derivativos.ods` | The spreadsheet itself — source the mapping was read from |
 
 Documentation is in English, with one deliberate exception: `RETROSPECTIVE_GUIDE.md` is in
 Portuguese, since it governs Portuguese writing and its examples of register only work in the
